@@ -8,7 +8,7 @@ const auth = vi.hoisted(() => ({
   signOut: vi.fn(),
   onSignedOut: vi.fn(),
 }));
-vi.mock('./auth', () => auth);
+vi.mock('./auth', () => ({ ...auth, TEMP_LOGIN: 'abc' }));
 
 import { App } from './App';
 
@@ -68,6 +68,19 @@ describe('App', () => {
     await screen.findByRole('heading', { name: 'Dashboard' });
     act(ended);
     expect(await screen.findByLabelText('Email')).toBeTruthy();
+  });
+
+  it('shows a notice that the temporary sign-in cannot save', async () => {
+    auth.restoreSession.mockResolvedValue('abc');
+    render(<App />);
+    expect((await screen.findByRole('status')).textContent).toContain('Temporary sign-in');
+  });
+
+  it('shows no such notice for a real admin', async () => {
+    auth.restoreSession.mockResolvedValue('admin@fitnessmarket.com');
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Dashboard' });
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('menu button toggles the navigation and sections switch', async () => {
