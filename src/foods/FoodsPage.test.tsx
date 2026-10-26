@@ -9,7 +9,9 @@ const api = vi.hoisted(() => ({
   setPublished: vi.fn(),
   deleteFood: vi.fn(),
 }));
+const categoriesApi = vi.hoisted(() => ({ listCategories: vi.fn() }));
 vi.mock('./api', () => api);
+vi.mock('../categories/api', () => categoriesApi);
 
 import { FoodsPage } from './FoodsPage';
 
@@ -17,11 +19,17 @@ const variant = (id: string, name: string, calories: number) => ({
   id, name, basisAmount: 100, basisUnit: 'GRAM' as const, calories, proteinG: 0, carbsG: 0, fatG: 0,
 });
 const FOODS: Food[] = [
-  { id: 'c', name: 'Corn', category: 'VEGETABLE', published: true, variants: [variant('c1', 'Boiled', 96)] },
-  { id: 'p', name: 'Chicken breast', category: 'MEAT_AND_POULTRY', published: false, variants: [variant('p1', 'Fried', 220), variant('p2', 'Raw', 120)] },
+  { id: 'c', name: 'Corn', categoryId: 'cat-veg', published: true, variants: [variant('c1', 'Boiled', 96)] },
+  { id: 'p', name: 'Chicken breast', categoryId: 'cat-food', published: false, variants: [variant('p1', 'Fried', 220), variant('p2', 'Raw', 120)] },
+];
+
+const CATEGORIES = [
+  { id: 'cat-food', name: 'Food', sortOrder: 0, isDefault: true, foodCount: 1 },
+  { id: 'cat-veg', name: 'Vegetables', sortOrder: 1, isDefault: false, foodCount: 1 },
 ];
 
 beforeEach(() => {
+  categoriesApi.listCategories.mockResolvedValue(CATEGORIES);
   api.listFoods.mockResolvedValue(FOODS);
   api.saveFood.mockResolvedValue(undefined);
   api.setPublished.mockResolvedValue(undefined);
@@ -38,6 +46,7 @@ describe('FoodsPage list', () => {
     render(<FoodsPage />);
     expect(await screen.findByText('Corn')).toBeTruthy();
     expect(screen.getByText('Fried: 220 kcal per 100 g')).toBeTruthy();
+    expect(within(screen.getByText('Corn').closest('li')!).getByText('Vegetables')).toBeTruthy(); // category on the card
     expect(screen.getByText('Published')).toBeTruthy();
     expect(screen.getByText('Draft')).toBeTruthy();
   });
@@ -49,8 +58,9 @@ describe('FoodsPage list', () => {
     expect(screen.queryByText('Corn')).toBeNull();
     expect(screen.getByText('Chicken breast')).toBeTruthy();
     await userEvent.clear(screen.getByLabelText('Search foods'));
-    await userEvent.selectOptions(screen.getByLabelText('Filter by category'), 'VEGETABLE');
+    await userEvent.selectOptions(screen.getByLabelText('Filter by category'), 'cat-veg');
     expect(screen.queryByText('Chicken breast')).toBeNull();
+    expect(screen.getByText('Corn')).toBeTruthy();
   });
 
   it('shows an empty state and a retryable error', async () => {
@@ -75,6 +85,20 @@ describe('FoodsPage list', () => {
 });
 
 describe('FoodEditor', () => {
+  it('saves the chosen category', async () => {
+    render(<FoodsPage />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add food' }));
+    await userEvent.type(screen.getByLabelText('Food name'), 'Spinach');
+    await userEvent.selectOptions(screen.getByLabelText('Category'), 'cat-veg');
+    await userEvent.type(screen.getByLabelText('Preparation'), 'Raw');
+    await userEvent.type(screen.getByLabelText('Calories (kcal)'), '23');
+    await userEvent.type(screen.getByLabelText('Protein (g)'), '2.9');
+    await userEvent.type(screen.getByLabelText('Carbs (g)'), '3.6');
+    await userEvent.type(screen.getByLabelText('Fat (g)'), '0.4');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(api.saveFood.mock.calls[0][0]).toMatchObject({ name: 'Spinach', category_id: 'cat-veg' });
+  });
+
   it('blocks saving an invalid food and lists the problems', async () => {
     render(<FoodsPage />);
     await userEvent.click(await screen.findByRole('button', { name: 'Add food' }));
@@ -104,7 +128,7 @@ describe('FoodEditor', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(api.saveFood).toHaveBeenCalledTimes(1);
     const payload = api.saveFood.mock.calls[0][0];
-    expect(payload).toMatchObject({ id: null, name: 'Potato', published: false });
+    expect(payload).toMatchObject({ id: null, name: 'Potato', category_id: 'cat-food', published: false }); // new foods start in the default category
     expect(payload.variants).toHaveLength(2);
     expect(payload.variants[1]).toMatchObject({ name: 'Fried', calories: 312, fat_g: 15, basis_amount: 100 });
     expect(api.listFoods).toHaveBeenCalledTimes(2); // reloaded after save

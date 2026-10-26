@@ -1,17 +1,19 @@
+import { Category } from '../categories/model';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import {
-  FOOD_CATEGORIES, FoodDraft, PREPARATION_SUGGESTIONS, QUANTITY_UNITS, UNIT_LABEL, VariantDraft,
-  blankVariant, caloriesLookOff, categoryLabel, toPayload, validateDraft,
+  FoodDraft, PREPARATION_SUGGESTIONS, QUANTITY_UNITS, UNIT_LABEL, VariantDraft,
+  blankVariant, caloriesLookOff, toPayload, validateDraft,
 } from './model';
 
 interface FoodEditorProps {
   initial: FoodDraft;
+  categories: Category[];
   onSave: (payload: ReturnType<typeof toPayload>) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
 }
 
-export function FoodEditor({ initial, onSave, onDelete, onClose }: FoodEditorProps) {
+export function FoodEditor({ initial, categories, onSave, onDelete, onClose }: FoodEditorProps) {
   const [draft, setDraft] = useState(initial);
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -74,9 +76,9 @@ export function FoodEditor({ initial, onSave, onDelete, onClose }: FoodEditorPro
             </div>
             <div>
               <label htmlFor="food-category">Category</label>
-              <select id="food-category" value={draft.category}
-                onChange={(e) => setDraft({ ...draft, category: e.target.value as FoodDraft['category'] })}>
-                {FOOD_CATEGORIES.map((c) => <option key={c} value={c}>{categoryLabel(c)}</option>)}
+              <select id="food-category" value={draft.categoryId}
+                onChange={(e) => setDraft({ ...draft, categoryId: e.target.value })}>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           </div>

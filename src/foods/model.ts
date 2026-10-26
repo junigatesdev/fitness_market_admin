@@ -1,11 +1,5 @@
 // Mirrors the Android domain model (domain/model/food) and the Supabase tables.
 
-export const FOOD_CATEGORIES = [
-  'FRUIT', 'VEGETABLE', 'MEAT_AND_POULTRY', 'FISH_AND_SEAFOOD', 'EGGS', 'DAIRY', 'GRAINS_AND_BREAD',
-  'LEGUMES', 'NUTS_AND_SEEDS', 'FATS_AND_OILS', 'BEVERAGES', 'SWEETS_AND_SNACKS', 'MIXED_DISHES', 'OTHER',
-] as const;
-export type FoodCategory = (typeof FOOD_CATEGORIES)[number];
-
 export const QUANTITY_UNITS = ['GRAM', 'MILLILITER', 'PIECE', 'SERVING'] as const;
 export type QuantityUnit = (typeof QUANTITY_UNITS)[number];
 
@@ -19,11 +13,6 @@ export const PREPARATION_SUGGESTIONS = [
 
 /** Same limit as the Android app's FoodValidator. */
 export const NAME_MAX_LENGTH = 100;
-
-export function categoryLabel(c: FoodCategory): string {
-  const words = c.toLowerCase().replace(/_and_/g, ' & ').replace(/_/g, ' ');
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}
 
 export interface Variant {
   id: string;
@@ -39,7 +28,7 @@ export interface Variant {
 export interface Food {
   id: string;
   name: string;
-  category: FoodCategory;
+  categoryId: string;
   published: boolean;
   variants: Variant[];
 }
@@ -58,7 +47,7 @@ export interface VariantRow {
 export interface FoodRow {
   id: string;
   name: string;
-  category: FoodCategory;
+  category_id: string;
   published: boolean;
   food_variants: VariantRow[];
 }
@@ -67,7 +56,7 @@ export function fromRow(row: FoodRow): Food {
   return {
     id: row.id,
     name: row.name,
-    category: row.category,
+    categoryId: row.category_id,
     published: row.published,
     variants: [...row.food_variants]
       .map((v) => ({
@@ -101,7 +90,7 @@ export interface VariantDraft {
 export interface FoodDraft {
   id?: string;
   name: string;
-  category: FoodCategory;
+  categoryId: string;
   published: boolean;
   variants: VariantDraft[];
 }
@@ -114,15 +103,15 @@ export const blankVariant = (): VariantDraft => ({
   calories: '', proteinG: '', carbsG: '', fatG: '',
 });
 
-export const blankFood = (): FoodDraft => ({
-  name: '', category: 'OTHER', published: false, variants: [blankVariant()],
+export const blankFood = (categoryId: string): FoodDraft => ({
+  name: '', categoryId, published: false, variants: [blankVariant()],
 });
 
 export function toDraft(food: Food): FoodDraft {
   return {
     id: food.id,
     name: food.name,
-    category: food.category,
+    categoryId: food.categoryId,
     published: food.published,
     variants: food.variants.map((v) => ({
       key: nextKey(), id: v.id, name: v.name, basisAmount: String(v.basisAmount), basisUnit: v.basisUnit,
@@ -174,7 +163,7 @@ export function toPayload(draft: FoodDraft) {
   return {
     id: draft.id ?? null,
     name: draft.name.trim(),
-    category: draft.category,
+    category_id: draft.categoryId,
     published: draft.published,
     variants: draft.variants.map((v) => ({
       id: v.id ?? null,

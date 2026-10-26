@@ -17,8 +17,8 @@ const v = (id: string, name: string, calories: number, proteinG: number) => ({
   id, name, basisAmount: 100, basisUnit: 'GRAM' as const, calories, proteinG, carbsG: 0, fatG: 0,
 });
 const FOODS: Food[] = [
-  { id: 'c', name: 'Chicken breast', category: 'MEAT_AND_POULTRY', published: true, variants: [v('c1', 'Grilled', 165, 31), v('c2', 'Fried', 250, 27)] },
-  { id: 'r', name: 'White rice', category: 'GRAINS_AND_BREAD', published: false, variants: [v('r1', 'Cooked', 130, 2.7)] },
+  { id: 'c', name: 'Chicken breast', categoryId: 'cat-food', published: true, variants: [v('c1', 'Grilled', 165, 31), v('c2', 'Fried', 250, 27)] },
+  { id: 'r', name: 'White rice', categoryId: 'cat-food', published: false, variants: [v('r1', 'Cooked', 130, 2.7)] },
 ];
 const MEALS: Meal[] = [
   { id: 'm1', name: 'Chicken bowl', tag: 'High protein', accent: 'GREEN', published: false, items: [{ variantId: 'c1', amount: 200 }, { variantId: 'r1', amount: 100 }] },

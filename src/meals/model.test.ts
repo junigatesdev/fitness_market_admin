@@ -4,18 +4,18 @@ import { MealDraft, MealRow, blankMeal, draftFoodNames, fromRow, newItem, toDraf
 import { formatTotals, indexVariants, scale, sumItems } from './nutrition';
 
 const chicken: Food = {
-  id: 'f1', name: 'Chicken breast', category: 'MEAT_AND_POULTRY', published: true,
+  id: 'f1', name: 'Chicken breast', categoryId: 'cat-food', published: true,
   variants: [
     { id: 'v1', name: 'Grilled', basisAmount: 100, basisUnit: 'GRAM', calories: 165, proteinG: 31, carbsG: 0, fatG: 3.6 },
     { id: 'v2', name: 'Fried', basisAmount: 100, basisUnit: 'GRAM', calories: 250, proteinG: 27, carbsG: 8, fatG: 12 },
   ],
 };
 const rice: Food = {
-  id: 'f2', name: 'White rice', category: 'GRAINS_AND_BREAD', published: false,
+  id: 'f2', name: 'White rice', categoryId: 'cat-food', published: false,
   variants: [{ id: 'v3', name: 'Cooked', basisAmount: 100, basisUnit: 'GRAM', calories: 130, proteinG: 2.7, carbsG: 28, fatG: 0.3 }],
 };
 const egg: Food = {
-  id: 'f3', name: 'Egg', category: 'EGGS', published: true,
+  id: 'f3', name: 'Egg', categoryId: 'cat-food', published: true,
   variants: [{ id: 'v4', name: 'Boiled', basisAmount: 1, basisUnit: 'PIECE', calories: 78, proteinG: 6, carbsG: 0.6, fatG: 5 }],
 };
 const index = indexVariants([chicken, rice, egg]);

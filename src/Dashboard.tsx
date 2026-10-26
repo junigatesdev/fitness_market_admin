@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
+import { CategoriesPage } from './categories/CategoriesPage';
 import { FoodsPage } from './foods/FoodsPage';
 import { MealsPage } from './meals/MealsPage';
 
@@ -11,6 +12,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '▦' },
   { id: 'foods', label: 'Foods', icon: '🍎' },
+  { id: 'categories', label: 'Categories', icon: '🏷' },
   { id: 'meals', label: 'Meals', icon: '🍽' },
   { id: 'users', label: 'Users', icon: '👥' },
   { id: 'settings', label: 'Settings', icon: '⚙' },
@@ -96,7 +98,7 @@ export function Dashboard({ username, onSignOut }: DashboardProps) {
         </header>
 
         <main className="content">
-          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : <ComingSoon title={current.label} />}
+          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : page === 'categories' ? <CategoriesPage /> : <ComingSoon title={current.label} />}
         </main>
       </div>
     </div>

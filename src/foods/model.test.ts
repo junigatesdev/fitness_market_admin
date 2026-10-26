@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  FoodRow, blankFood, blankVariant, caloriesLookOff, categoryLabel, formatVariant, fromRow, parseNumber, toDraft,
+  FoodRow, blankFood, blankVariant, caloriesLookOff, formatVariant, fromRow, parseNumber, toDraft,
   toPayload, validateDraft,
 } from './model';
 
 const valid = () => {
-  const d = blankFood();
+  const d = blankFood('cat-food');
   d.name = 'Chicken breast';
   d.variants[0] = { ...d.variants[0], name: 'Grilled', calories: '165', proteinG: '31', carbsG: '0', fatG: '3.6' };
   return d;
@@ -30,7 +30,7 @@ describe('validateDraft', () => {
     expect(validateDraft(d)).toEqual([]);
   });
 
-  it('rejects a blank new food', () => expect(validateDraft(blankFood()).length).toBeGreaterThan(0));
+  it('rejects a blank new food', () => expect(validateDraft(blankFood('cat-food')).length).toBeGreaterThan(0));
 
   it('rejects long names, negatives, zero amount and duplicates', () => {
     const d = valid();
@@ -69,13 +69,13 @@ describe('payload and mapping', () => {
     d.name = '  Chicken breast ';
     d.variants[0].fatG = '3,6';
     expect(toPayload(d)).toEqual({
-      id: null, name: 'Chicken breast', category: 'OTHER', published: false,
+      id: null, name: 'Chicken breast', category_id: 'cat-food', published: false,
       variants: [{ id: null, name: 'Grilled', basis_amount: 100, basis_unit: 'GRAM', calories: 165, protein_g: 31, carbs_g: 0, fat_g: 3.6 }],
     });
   });
 
   const row: FoodRow = {
-    id: 'f1', name: 'Corn', category: 'VEGETABLE', published: true,
+    id: 'f1', name: 'Corn', category_id: 'cat-veg', published: true,
     food_variants: [
       { id: 'b', name: 'Raw', basis_amount: 100, basis_unit: 'GRAM', calories: 86, protein_g: 3.3, carbs_g: 19, fat_g: 1.4 },
       { id: 'a', name: 'Boiled', basis_amount: 100, basis_unit: 'GRAM', calories: 96, protein_g: 3.4, carbs_g: 21, fat_g: 1.5 },
@@ -92,6 +92,5 @@ describe('payload and mapping', () => {
 
   it('formats labels', () => {
     expect(formatVariant(fromRow(row).variants[0])).toBe('Boiled: 96 kcal per 100 g');
-    expect(categoryLabel('MEAT_AND_POULTRY')).toBe('Meat & poultry');
   });
 });
