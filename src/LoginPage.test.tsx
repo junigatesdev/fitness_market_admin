@@ -13,9 +13,6 @@ describe('validateLogin', () => {
   it('rejects malformed email', () => {
     expect(validateLogin('nope', 'x').email).toBe('Enter a valid email address.');
   });
-  it('lets the temporary abc login through the email check', () => {
-    expect(validateLogin('abc', 'x')).toEqual({});
-  });
   it('accepts valid input', () => {
     expect(validateLogin('a@b.co', 'x')).toEqual({});
   });

@@ -3,7 +3,7 @@
 Admin portal for the Fitness Market Android app (food database, meal ideas). Web app: Vite + React + TypeScript,
 with [Supabase](https://supabase.com) for sign-in and data.
 
-**Status:** real admin sign-in and a dashboard (sample numbers). Foods and meal ideas screens are next.
+**Status:** admin sign-in, dashboard (sample numbers), and screens for Foods, Categories and Meals.
 
 ```bash
 npm install
@@ -14,9 +14,12 @@ npm run build
 
 ## Supabase setup (once)
 
-1. **Run the SQL.** Supabase dashboard → **SQL Editor** → New query → paste
-   `supabase/migrations/0001_init.sql` → **Run**. It creates the tables and the security rules.
-2. **Create your admin user.** **Authentication → Users → Add user** (email + password, tick *Auto Confirm User*).
+1. **Run the SQL files, in order.** Supabase dashboard → **SQL Editor** → New query → paste a file → **Run**. Repeat for each:
+   1. `supabase/migrations/0001_init.sql`: tables and security rules
+   2. `supabase/migrations/0002_save_food.sql`: saving a food and its preparations in one step
+   3. `supabase/migrations/0003_meals.sql`: meals built from foods
+   4. `supabase/migrations/0004_categories.sql`: managed categories
+2. **Create your admin user.** **Authentication → Users → Add user** (your email + a strong password, tick *Auto Confirm User*).
 3. **Make it an admin.** In the SQL Editor run (with your email):
    ```sql
    insert into public.admins (user_id) select id from auth.users where email = 'you@example.com';

@@ -1,5 +1,4 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { TEMP_LOGIN } from './auth';
 import { CategoriesPage } from './categories/CategoriesPage';
 import { FoodsPage } from './foods/FoodsPage';
 import { MealsPage } from './meals/MealsPage';
@@ -99,11 +98,6 @@ export function Dashboard({ username, onSignOut }: DashboardProps) {
         </header>
 
         <main className="content">
-          {username === TEMP_LOGIN && (
-            <p className="notice" role="status">
-              Temporary sign-in. Not connected to the database account, so nothing can be saved. Sign in with your admin email to save changes.
-            </p>
-          )}
           {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : page === 'categories' ? <CategoriesPage /> : <ComingSoon title={current.label} />}
         </main>
       </div>
