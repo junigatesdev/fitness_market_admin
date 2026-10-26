@@ -76,7 +76,7 @@ describe('App', () => {
     const menu = await screen.findByRole('button', { name: 'Open menu' });
     await userEvent.click(menu);
     expect(menu.getAttribute('aria-expanded')).toBe('true');
-    await userEvent.click(screen.getByRole('button', { name: /Foods/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Users/ }));
     expect(menu.getAttribute('aria-expanded')).toBe('false');
     expect(screen.getByText('This section is coming soon.')).toBeTruthy();
   });

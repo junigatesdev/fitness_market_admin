@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
+import { FoodsPage } from './foods/FoodsPage';
 
 interface NavItem {
   id: string;
@@ -94,7 +95,7 @@ export function Dashboard({ username, onSignOut }: DashboardProps) {
         </header>
 
         <main className="content">
-          {page === 'dashboard' ? <Overview /> : <ComingSoon title={current.label} />}
+          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : <ComingSoon title={current.label} />}
         </main>
       </div>
     </div>
