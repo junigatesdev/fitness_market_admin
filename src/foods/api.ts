@@ -34,7 +34,28 @@ export async function setPublished(id: string, published: boolean): Promise<void
   if (error) fail('Could not update', error);
 }
 
+/** Meals that use any preparation of this food. */
+export async function mealsUsingFood(foodId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('meal_items')
+    .select('meals(name), food_variants!inner(food_id)')
+    .eq('food_variants.food_id', foodId)
+    .returns<{ meals: { name: string } | null }[]>();
+  if (error) fail('Could not check meals', error);
+  return [...new Set(data.map((r) => r.meals?.name).filter((n): n is string => !!n))].sort();
+}
+
+/** Refuses (with the meal names) while any meal uses the food; the database enforces this too. */
 export async function deleteFood(id: string): Promise<void> {
+  const used = await mealsUsingFood(id);
+  if (used.length > 0) {
+    throw new Error(`Can't delete: used by these meals: ${used.join(', ')}. Remove it from those meals first.`);
+  }
   const { error } = await supabase.from('foods').delete().eq('id', id);
-  if (error) fail('Could not delete', error);
+  if (error) {
+    fail(
+      'Could not delete',
+      error.message.includes('meal_items') ? { message: 'a meal still uses this food.' } : error,
+    );
+  }
 }

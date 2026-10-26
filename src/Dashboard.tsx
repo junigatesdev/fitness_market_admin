@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { FoodsPage } from './foods/FoodsPage';
+import { MealsPage } from './meals/MealsPage';
 
 interface NavItem {
   id: string;
@@ -10,7 +11,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '▦' },
   { id: 'foods', label: 'Foods', icon: '🍎' },
-  { id: 'meals', label: 'Meal ideas', icon: '🍽' },
+  { id: 'meals', label: 'Meals', icon: '🍽' },
   { id: 'users', label: 'Users', icon: '👥' },
   { id: 'settings', label: 'Settings', icon: '⚙' },
 ];
@@ -19,18 +20,18 @@ const NAV: NavItem[] = [
 const STATS = [
   { label: 'Foods', value: '248', note: '12 added this week' },
   { label: 'Preparations', value: '611', note: 'raw, cooked, fried…' },
-  { label: 'Meal ideas', value: '18', note: '15 published' },
+  { label: 'Meals', value: '18', note: '15 published' },
   { label: 'Drafts', value: '7', note: 'waiting for review' },
 ];
 
 const ACTIVITY = [
   { what: 'Chicken breast (grilled) updated', when: '2 hours ago' },
-  { what: 'Meal idea "Overnight Oats" published', when: 'Yesterday' },
+  { what: 'Meal "Overnight Oats" published', when: 'Yesterday' },
   { what: 'Sweet potato (boiled) added', when: 'Yesterday' },
   { what: 'Corn (cooked) added', when: '2 days ago' },
 ];
 
-const QUICK_ACTIONS = ['Add food', 'Add meal idea', 'Import foods'];
+const QUICK_ACTIONS = ['Add food', 'Add meal', 'Import foods'];
 
 interface DashboardProps {
   username: string;
@@ -95,7 +96,7 @@ export function Dashboard({ username, onSignOut }: DashboardProps) {
         </header>
 
         <main className="content">
-          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : <ComingSoon title={current.label} />}
+          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : <ComingSoon title={current.label} />}
         </main>
       </div>
     </div>

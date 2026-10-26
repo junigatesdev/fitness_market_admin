@@ -154,3 +154,17 @@ select { padding: 10px 12px; font-size: 1rem; border: 1px solid var(--border); b
   .toolbar select { flex: 1 1 100%; width: 100%; }
   .primary.add { flex: 1 1 100%; }
 }
+
+/* Meals */
+.picker { display: flex; flex-direction: column; gap: 4px; }
+.results { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.result { width: 100%; text-align: left; padding: 10px 12px; font-size: 1rem; background: #fff; border: 0; border-top: 1px solid #eef2f3; cursor: pointer; }
+.results li:first-child .result { border-top: 0; }
+.result:hover { background: #e8f3f5; }
+.item { gap: 4px; }
+.item-kcal { margin: 0; align-self: end; padding-bottom: 10px; font-weight: 600; color: var(--teal-dark); }
+.totals { margin: 4px 0 0; font-weight: 600; color: var(--teal-dark); }
+.food-card.accent-green { border-left: 4px solid #2e9e6b; }
+.food-card.accent-ocean { border-left: 4px solid var(--teal); }
+.food-card.accent-blue { border-left: 4px solid #3b6fc4; }
+.food-card.accent-neutral { border-left: 4px solid #9aa9ad; }
