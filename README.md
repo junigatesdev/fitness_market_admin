@@ -14,7 +14,7 @@ npm run build
 
 ## Supabase setup (once)
 
-1. **Run the SQL files, in order.** Supabase dashboard → **SQL Editor** → New query → paste a file → **Run**. Repeat for each:
+1. **Run the SQL.** Easiest: paste all of `supabase/setup-all.sql` into a new query and Run (it is the four files below joined, for a new project). Or run the files separately, in order. Supabase dashboard → **SQL Editor** → New query → paste a file → **Run**. Repeat for each:
    1. `supabase/migrations/0001_init.sql`: tables and security rules
    2. `supabase/migrations/0002_save_food.sql`: saving a food and its preparations in one step
    3. `supabase/migrations/0003_meals.sql`: meals built from foods
