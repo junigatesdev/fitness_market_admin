@@ -8,13 +8,10 @@ afterEach(cleanup);
 
 describe('validateLogin', () => {
   it('requires email and password', () => {
-    expect(validateLogin('', '')).toEqual({ email: 'Enter your email.', password: 'Enter your password.' });
-  });
-  it('rejects malformed email', () => {
-    expect(validateLogin('nope', 'x').email).toBe('Enter a valid email address.');
+    expect(validateLogin('', '')).toEqual({ username: 'Enter your username.', password: 'Enter your password.' });
   });
   it('accepts valid input', () => {
-    expect(validateLogin('a@b.co', 'x')).toEqual({});
+    expect(validateLogin('abc', 'x')).toEqual({});
   });
 });
 
@@ -23,22 +20,22 @@ describe('LoginPage', () => {
     const onLogin = vi.fn();
     render(<LoginPage onLogin={onLogin} />);
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-    expect(screen.getByText('Enter your email.')).toBeTruthy();
+    expect(screen.getByText('Enter your username.')).toBeTruthy();
     expect(onLogin).not.toHaveBeenCalled();
   });
 
   it('submits trimmed email and password', async () => {
     const onLogin = vi.fn().mockResolvedValue(undefined);
     render(<LoginPage onLogin={onLogin} />);
-    await userEvent.type(screen.getByLabelText('Email'), ' admin@fitnessmarket.com ');
+    await userEvent.type(screen.getByLabelText('Username'), ' abc ');
     await userEvent.type(screen.getByLabelText('Password'), 'secret');
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-    expect(onLogin).toHaveBeenCalledWith('admin@fitnessmarket.com', 'secret');
+    expect(onLogin).toHaveBeenCalledWith('abc', 'secret');
   });
 
   it('shows the error when sign-in fails', async () => {
     render(<LoginPage onLogin={() => Promise.reject(new Error('Wrong email or password.'))} />);
-    await userEvent.type(screen.getByLabelText('Email'), 'a@b.co');
+    await userEvent.type(screen.getByLabelText('Username'), 'abc');
     await userEvent.type(screen.getByLabelText('Password'), 'x');
     await userEvent.click(screen.getByRole('button', { name: 'Sign in' }));
     expect((await screen.findByRole('alert')).textContent).toBe('Wrong email or password.');

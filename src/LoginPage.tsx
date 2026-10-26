@@ -3,7 +3,7 @@ import { LoginErrors, validateLogin } from './validation';
 
 interface LoginPageProps {
   /** Resolve on success; reject with an Error whose message is shown to the user. Real auth is wired in later. */
-  onLogin?: (email: string, password: string) => Promise<void>;
+  onLogin?: (username: string, password: string) => Promise<void>;
 }
 
 const notConnected = async () => {
@@ -11,7 +11,7 @@ const notConnected = async () => {
 };
 
 export function LoginPage({ onLogin = notConnected }: LoginPageProps) {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<LoginErrors>({});
@@ -21,13 +21,13 @@ export function LoginPage({ onLogin = notConnected }: LoginPageProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setFormError(undefined);
-    const found = validateLogin(email, password);
+    const found = validateLogin(username, password);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
     setSubmitting(true);
     try {
-      await onLogin(email.trim(), password);
+      await onLogin(username.trim(), password);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Something went wrong. Try again.');
     } finally {
@@ -43,17 +43,17 @@ export function LoginPage({ onLogin = notConnected }: LoginPageProps) {
 
         {formError && <p role="alert" className="form-error">{formError}</p>}
 
-        <label htmlFor="email">Email</label>
+        <label htmlFor="username">Username</label>
         <input
-          id="email"
-          type="email"
+          id="username"
+          type="text"
           autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? 'email-error' : undefined}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          aria-invalid={!!errors.username}
+          aria-describedby={errors.username ? 'username-error' : undefined}
         />
-        {errors.email && <p id="email-error" className="field-error">{errors.email}</p>}
+        {errors.username && <p id="username-error" className="field-error">{errors.username}</p>}
 
         <label htmlFor="password">Password</label>
         <div className="password">
