@@ -29,6 +29,8 @@ export interface Food {
   id: string;
   name: string;
   categoryId: string;
+  /** World areas (food cultures) this food belongs to; any number, in no particular order. */
+  areaIds: string[];
   published: boolean;
   variants: Variant[];
 }
@@ -50,6 +52,7 @@ export interface FoodRow {
   category_id: string;
   published: boolean;
   food_variants: VariantRow[];
+  food_world_areas: { area_id: string }[];
 }
 
 export function fromRow(row: FoodRow): Food {
@@ -57,6 +60,7 @@ export function fromRow(row: FoodRow): Food {
     id: row.id,
     name: row.name,
     categoryId: row.category_id,
+    areaIds: row.food_world_areas.map((a) => a.area_id),
     published: row.published,
     variants: [...row.food_variants]
       .map((v) => ({
@@ -91,6 +95,7 @@ export interface FoodDraft {
   id?: string;
   name: string;
   categoryId: string;
+  areaIds: string[];
   published: boolean;
   variants: VariantDraft[];
 }
@@ -104,7 +109,7 @@ export const blankVariant = (): VariantDraft => ({
 });
 
 export const blankFood = (categoryId: string): FoodDraft => ({
-  name: '', categoryId, published: false, variants: [blankVariant()],
+  name: '', categoryId, areaIds: [], published: false, variants: [blankVariant()],
 });
 
 export function toDraft(food: Food): FoodDraft {
@@ -112,6 +117,7 @@ export function toDraft(food: Food): FoodDraft {
     id: food.id,
     name: food.name,
     categoryId: food.categoryId,
+    areaIds: [...food.areaIds],
     published: food.published,
     variants: food.variants.map((v) => ({
       key: nextKey(), id: v.id, name: v.name, basisAmount: String(v.basisAmount), basisUnit: v.basisUnit,
@@ -164,6 +170,7 @@ export function toPayload(draft: FoodDraft) {
     id: draft.id ?? null,
     name: draft.name.trim(),
     category_id: draft.categoryId,
+    area_ids: draft.areaIds, // the food's tags become exactly this list
     published: draft.published,
     variants: draft.variants.map((v) => ({
       id: v.id ?? null,

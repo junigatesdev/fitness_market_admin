@@ -1,3 +1,4 @@
+import { Area } from '../areas/model';
 import { Category } from '../categories/model';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import {
@@ -8,12 +9,13 @@ import {
 interface FoodEditorProps {
   initial: FoodDraft;
   categories: Category[];
+  areas: Area[];
   onSave: (payload: ReturnType<typeof toPayload>) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
 }
 
-export function FoodEditor({ initial, categories, onSave, onDelete, onClose }: FoodEditorProps) {
+export function FoodEditor({ initial, categories, areas, onSave, onDelete, onClose }: FoodEditorProps) {
   const [draft, setDraft] = useState(initial);
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -82,6 +84,27 @@ export function FoodEditor({ initial, categories, onSave, onDelete, onClose }: F
               </select>
             </div>
           </div>
+
+          <fieldset className="areas">
+            <legend>World areas</legend>
+            <p className="hint">Which food cultures this food belongs to. Pick as many as fit; leave empty if none.</p>
+            {areas.length === 0 ? (
+              <p className="hint">No areas yet. Add some on the World areas screen.</p>
+            ) : (
+              <div className="area-options">
+                {areas.map((a) => (
+                  <label key={a.id} className="check chip">
+                    <input type="checkbox" checked={draft.areaIds.includes(a.id)}
+                      onChange={(e) => setDraft({
+                        ...draft,
+                        areaIds: e.target.checked ? [...draft.areaIds, a.id] : draft.areaIds.filter((id) => id !== a.id),
+                      })} />
+                    {a.name}
+                  </label>
+                ))}
+              </div>
+            )}
+          </fieldset>
 
           <label className="check">
             <input type="checkbox" checked={draft.published}

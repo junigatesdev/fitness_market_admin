@@ -10,8 +10,10 @@ const api = vi.hoisted(() => ({
   deleteFood: vi.fn(),
 }));
 const categoriesApi = vi.hoisted(() => ({ listCategories: vi.fn() }));
+const areasApi = vi.hoisted(() => ({ listAreas: vi.fn() }));
 vi.mock('./api', () => api);
 vi.mock('../categories/api', () => categoriesApi);
+vi.mock('../areas/api', () => areasApi);
 
 import { FoodsPage } from './FoodsPage';
 
@@ -19,8 +21,8 @@ const variant = (id: string, name: string, calories: number) => ({
   id, name, basisAmount: 100, basisUnit: 'GRAM' as const, calories, proteinG: 0, carbsG: 0, fatG: 0,
 });
 const FOODS: Food[] = [
-  { id: 'c', name: 'Corn', categoryId: 'cat-veg', published: true, variants: [variant('c1', 'Boiled', 96)] },
-  { id: 'p', name: 'Chicken breast', categoryId: 'cat-food', published: false, variants: [variant('p1', 'Fried', 220), variant('p2', 'Raw', 120)] },
+  { id: 'c', name: 'Corn', categoryId: 'cat-veg', areaIds: ['a-south', 'a-west'], published: true, variants: [variant('c1', 'Boiled', 96)] },
+  { id: 'p', name: 'Chicken breast', categoryId: 'cat-food', areaIds: ['a-west'], published: false, variants: [variant('p1', 'Fried', 220), variant('p2', 'Raw', 120)] },
 ];
 
 const CATEGORIES = [
@@ -28,8 +30,14 @@ const CATEGORIES = [
   { id: 'cat-veg', name: 'Vegetables', sortOrder: 1, isDefault: false, foodCount: 1 },
 ];
 
+const AREAS = [
+  { id: 'a-west', name: 'Western', sortOrder: 1, foodCount: 1 },
+  { id: 'a-south', name: 'South Asian', sortOrder: 2, foodCount: 2 },
+];
+
 beforeEach(() => {
   categoriesApi.listCategories.mockResolvedValue(CATEGORIES);
+  areasApi.listAreas.mockResolvedValue(AREAS);
   api.listFoods.mockResolvedValue(FOODS);
   api.saveFood.mockResolvedValue(undefined);
   api.setPublished.mockResolvedValue(undefined);
@@ -76,6 +84,20 @@ describe('FoodsPage list', () => {
     expect(await screen.findByText('Corn')).toBeTruthy();
   });
 
+  it('shows each food\'s world areas as tags', async () => {
+    render(<FoodsPage />);
+    const tags = within((await screen.findByText('Corn')).closest('li')!).getByLabelText('World areas');
+    expect(within(tags).getAllByRole('listitem').map((li) => li.textContent)).toEqual(['South Asian', 'Western']);
+  });
+
+  it('filters by world area', async () => {
+    render(<FoodsPage />);
+    await screen.findByText('Corn');
+    await userEvent.selectOptions(screen.getByLabelText('Filter by world area'), 'a-south');
+    expect(screen.getByText('Corn')).toBeTruthy();
+    expect(screen.queryByText('Chicken breast')).toBeNull();
+  });
+
   it('publishes a draft', async () => {
     render(<FoodsPage />);
     const card = (await screen.findByText('Chicken breast')).closest('li')!;
@@ -97,6 +119,24 @@ describe('FoodEditor', () => {
     await userEvent.type(screen.getByLabelText('Fat (g)'), '0.4');
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(api.saveFood.mock.calls[0][0]).toMatchObject({ name: 'Spinach', category_id: 'cat-veg' });
+  });
+
+  it('tags a food with several world areas and saves exactly those', async () => {
+    render(<FoodsPage />);
+    const card = (await screen.findByText('Chicken breast')).closest('li')!;
+    await userEvent.click(within(card).getByRole('button', { name: 'Edit' }));
+    expect((screen.getByLabelText('Western') as HTMLInputElement).checked).toBe(true);
+    await userEvent.click(screen.getByLabelText('South Asian'));
+    await userEvent.click(screen.getByLabelText('Western')); // untick
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(api.saveFood.mock.calls[0][0].area_ids).toEqual(['a-south']);
+  });
+
+  it('a new food starts with no areas', async () => {
+    render(<FoodsPage />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add food' }));
+    expect((screen.getByLabelText('Western') as HTMLInputElement).checked).toBe(false);
+    expect((screen.getByLabelText('South Asian') as HTMLInputElement).checked).toBe(false);
   });
 
   it('blocks saving an invalid food and lists the problems', async () => {

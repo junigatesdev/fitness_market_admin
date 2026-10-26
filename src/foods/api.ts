@@ -12,7 +12,7 @@ export async function listFoods(): Promise<Food[]> {
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('foods')
-      .select('id, name, category_id, published, food_variants(id, name, basis_amount, basis_unit, calories, protein_g, carbs_g, fat_g)')
+      .select('id, name, category_id, published, food_world_areas(area_id), food_variants(id, name, basis_amount, basis_unit, calories, protein_g, carbs_g, fat_g)')
       .order('name')
       .order('id')
       .range(from, from + PAGE - 1)

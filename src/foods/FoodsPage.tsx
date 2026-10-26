@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { listAreas } from '../areas/api';
+import { Area } from '../areas/model';
 import { listCategories } from '../categories/api';
 import { Category } from '../categories/model';
 import * as api from './api';
@@ -8,6 +10,8 @@ import { Food, FoodDraft, blankFood, formatVariant, toDraft } from './model';
 export function FoodsPage() {
   const [foods, setFoods] = useState<Food[]>();
   const [categories, setCategories] = useState<Category[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [area, setArea] = useState('');
   const [loadError, setLoadError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   const [search, setSearch] = useState('');
@@ -17,8 +21,9 @@ export function FoodsPage() {
   const load = useCallback(async () => {
     setLoadError(undefined);
     try {
-      const [f, c] = await Promise.all([api.listFoods(), listCategories()]);
+      const [f, c, a] = await Promise.all([api.listFoods(), listCategories(), listAreas()]);
       setCategories(c);
+      setAreas(a);
       setFoods(f);
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : 'Could not load foods.');
@@ -30,13 +35,17 @@ export function FoodsPage() {
   }, [load]);
 
   const categoryName = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
+  const areaName = useMemo(() => new Map(areas.map((a) => [a.id, a.name])), [areas]);
 
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (foods ?? []).filter(
-      (f) => (!category || f.categoryId === category) && (!q || f.name.toLowerCase().includes(q)),
+      (f) =>
+        (!category || f.categoryId === category) &&
+        (!area || f.areaIds.includes(area)) &&
+        (!q || f.name.toLowerCase().includes(q)),
     );
-  }, [foods, search, category]);
+  }, [foods, search, category, area]);
 
   async function togglePublished(food: Food) {
     setActionError(undefined);
@@ -70,6 +79,10 @@ export function FoodsPage() {
           <option value="">All categories</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
+        <select aria-label="Filter by world area" value={area} onChange={(e) => setArea(e.target.value)}>
+          <option value="">All world areas</option>
+          {areas.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
         <button type="button" className="primary add" onClick={() => setEditing(blankFood(categories.find((c) => c.isDefault)?.id ?? categories[0]?.id ?? ''))}>Add food</button>
       </div>
 
@@ -100,6 +113,11 @@ export function FoodsPage() {
                   <span className={`badge ${f.published ? 'on' : ''}`}>{f.published ? 'Published' : 'Draft'}</span>
                 </div>
                 <p className="stat-note">{categoryName.get(f.categoryId) ?? 'Uncategorised'}</p>
+                {f.areaIds.length > 0 && (
+                  <ul className="tags" aria-label="World areas">
+                    {f.areaIds.map((id) => areaName.get(id)).filter((n): n is string => !!n).sort().map((n) => <li key={n}>{n}</li>)}
+                  </ul>
+                )}
                 <ul className="variants">
                   {f.variants.map((v) => <li key={v.id}>{formatVariant(v)}</li>)}
                 </ul>
@@ -119,6 +137,7 @@ export function FoodsPage() {
         <FoodEditor
           initial={editing}
           categories={categories}
+          areas={areas}
           onClose={() => setEditing(undefined)}
           onSave={handleSave}
           onDelete={editing.id ? () => handleDelete(editing.id!) : undefined}

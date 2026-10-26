@@ -69,13 +69,14 @@ describe('payload and mapping', () => {
     d.name = '  Chicken breast ';
     d.variants[0].fatG = '3,6';
     expect(toPayload(d)).toEqual({
-      id: null, name: 'Chicken breast', category_id: 'cat-food', published: false,
+      id: null, name: 'Chicken breast', category_id: 'cat-food', area_ids: [], published: false,
       variants: [{ id: null, name: 'Grilled', basis_amount: 100, basis_unit: 'GRAM', calories: 165, protein_g: 31, carbs_g: 0, fat_g: 3.6 }],
     });
   });
 
   const row: FoodRow = {
     id: 'f1', name: 'Corn', category_id: 'cat-veg', published: true,
+    food_world_areas: [{ area_id: 'a-south' }, { area_id: 'a-west' }],
     food_variants: [
       { id: 'b', name: 'Raw', basis_amount: 100, basis_unit: 'GRAM', calories: 86, protein_g: 3.3, carbs_g: 19, fat_g: 1.4 },
       { id: 'a', name: 'Boiled', basis_amount: 100, basis_unit: 'GRAM', calories: 96, protein_g: 3.4, carbs_g: 21, fat_g: 1.5 },
@@ -84,9 +85,11 @@ describe('payload and mapping', () => {
 
   it('maps rows, sorts preparations by name, and round-trips through a draft', () => {
     const food = fromRow(row);
+    expect(food.areaIds).toEqual(['a-south', 'a-west']);
     expect(food.variants.map((v) => v.name)).toEqual(['Boiled', 'Raw']);
     const draft = toDraft(food);
     expect(draft.id).toBe('f1');
+    expect(toPayload(draft).area_ids).toEqual(['a-south', 'a-west']);
     expect(toPayload(draft).variants[0]).toMatchObject({ id: 'a', calories: 96, protein_g: 3.4 });
   });
 
