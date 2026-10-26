@@ -98,6 +98,13 @@ describe('FoodsPage list', () => {
     expect(screen.queryByText('Chicken breast')).toBeNull();
   });
 
+  it('still shows foods, with a notice, when world areas are not set up in the database', async () => {
+    areasApi.listAreas.mockRejectedValue(new Error('Could not find the table public.world_areas'));
+    render(<FoodsPage />);
+    expect(await screen.findByText('Corn')).toBeTruthy();
+    expect(screen.getByRole('status').textContent).toContain('0005_world_areas.sql');
+  });
+
   it('publishes a draft', async () => {
     render(<FoodsPage />);
     const card = (await screen.findByText('Chicken breast')).closest('li')!;

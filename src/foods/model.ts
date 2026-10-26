@@ -52,7 +52,8 @@ export interface FoodRow {
   category_id: string;
   published: boolean;
   food_variants: VariantRow[];
-  food_world_areas: { area_id: string }[];
+  /** Absent when the world-area tables don't exist yet. */
+  food_world_areas?: { area_id: string }[];
 }
 
 export function fromRow(row: FoodRow): Food {
@@ -60,7 +61,7 @@ export function fromRow(row: FoodRow): Food {
     id: row.id,
     name: row.name,
     categoryId: row.category_id,
-    areaIds: row.food_world_areas.map((a) => a.area_id),
+    areaIds: (row.food_world_areas ?? []).map((a) => a.area_id),
     published: row.published,
     variants: [...row.food_variants]
       .map((v) => ({

@@ -7,19 +7,39 @@ function fail(action: string, error: { message: string }): never {
   throw new Error(`${action}: ${error.message}`);
 }
 
-export async function listFoods(): Promise<Food[]> {
+const VARIANTS = 'food_variants(id, name, basis_amount, basis_unit, calories, protein_g, carbs_g, fat_g)';
+const WITH_AREAS = `id, name, category_id, published, food_world_areas(area_id), ${VARIANTS}`;
+const WITHOUT_AREAS = `id, name, category_id, published, ${VARIANTS}`;
+
+/** The world-area tables aren't in the database yet (migration 0005 not run), or its schema cache is stale. */
+class AreaTablesMissing extends Error {}
+
+async function fetchAllFoods(select: string, detectMissingAreas: boolean): Promise<Food[]> {
   const foods: Food[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('foods')
-      .select('id, name, category_id, published, food_world_areas(area_id), food_variants(id, name, basis_amount, basis_unit, calories, protein_g, carbs_g, fat_g)')
+      .select(select)
       .order('name')
       .order('id')
       .range(from, from + PAGE - 1)
       .returns<FoodRow[]>();
-    if (error) fail('Could not load foods', error);
+    if (error) {
+      if (detectMissingAreas && error.message.includes('food_world_areas')) throw new AreaTablesMissing(error.message);
+      fail('Could not load foods', error);
+    }
     foods.push(...data.map(fromRow));
     if (data.length < PAGE) return foods;
+  }
+}
+
+/** Foods with their world-area tags. If the area tables don't exist yet, foods still load (without tags). */
+export async function listFoods(): Promise<Food[]> {
+  try {
+    return await fetchAllFoods(WITH_AREAS, true);
+  } catch (e) {
+    if (e instanceof AreaTablesMissing) return fetchAllFoods(WITHOUT_AREAS, false);
+    throw e;
   }
 }
 

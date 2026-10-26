@@ -11,6 +11,7 @@ export function FoodsPage() {
   const [foods, setFoods] = useState<Food[]>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
+  const [areasUnavailable, setAreasUnavailable] = useState(false);
   const [area, setArea] = useState('');
   const [loadError, setLoadError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
@@ -21,9 +22,15 @@ export function FoodsPage() {
   const load = useCallback(async () => {
     setLoadError(undefined);
     try {
-      const [f, c, a] = await Promise.all([api.listFoods(), listCategories(), listAreas()]);
+      // World areas are optional here: if their tables aren't set up yet, foods still load.
+      const areasResult = listAreas().then(
+        (a) => ({ ok: true as const, a }),
+        () => ({ ok: false as const, a: [] as Area[] }),
+      );
+      const [f, c, a] = await Promise.all([api.listFoods(), listCategories(), areasResult]);
       setCategories(c);
-      setAreas(a);
+      setAreas(a.a);
+      setAreasUnavailable(!a.ok);
       setFoods(f);
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : 'Could not load foods.');
@@ -85,6 +92,13 @@ export function FoodsPage() {
         </select>
         <button type="button" className="primary add" onClick={() => setEditing(blankFood(categories.find((c) => c.isDefault)?.id ?? categories[0]?.id ?? ''))}>Add food</button>
       </div>
+
+      {areasUnavailable && (
+        <p role="status" className="notice">
+          World areas aren’t set up in the database yet, so area tags are hidden. Foods still work. To turn them on, run
+          <code> 0005_world_areas.sql</code> in the Supabase SQL Editor, then refresh.
+        </p>
+      )}
 
       {actionError && <p role="alert" className="form-error">{actionError}</p>}
 
