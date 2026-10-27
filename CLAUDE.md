@@ -29,7 +29,7 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
   keep working when the migration has not been run yet (degrade gracefully with a notice), and the owner must be told to run
   the SQL first.
   New schema change = a **new numbered migration** (never edit one that was already run) AND append it to `setup-all.sql`.
-- Starter data: `seed-foods.sql` (115 foods, approximate values) and `seed-food-areas.sql`. Seeds must stay idempotent
+- Starter data: `seed-foods.sql` (115 foods, approximate values), `seed-food-areas.sql` and `seed-meals.sql` (6 meals). Seeds must stay idempotent
   (re-running adds nothing) and must never overwrite the owner's own foods.
 - **Test SQL before handing it over.** Postgres 16 server binaries exist at `/usr/lib/postgresql/16/bin` (start as user
   `postgres`). Create stand-ins for Supabase (`anon` / `authenticated` roles, an `auth.users` table, `auth.uid()` reading

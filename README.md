@@ -35,6 +35,7 @@ marked `published`.
 
 - `supabase/seed-foods.sql`: 115 general foods with 162 preparations (approximate reference values, review before relying on them). Safe to re-run.
 - `supabase/seed-food-areas.sql`: tags those foods with world areas (Global, Western, South Asian, ...). Run after `0005`. Safe to re-run.
+- `supabase/seed-meals.sql`: 6 meals built from the starter foods, published and hot. Run after `0006` and `seed-foods.sql`. Safe to re-run.
 
 ## Keys
 
