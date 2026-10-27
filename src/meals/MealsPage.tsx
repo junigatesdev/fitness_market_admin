@@ -134,39 +134,47 @@ export function MealsPage() {
       ) : shown.length === 0 ? (
         <p className="loading">No meals match your search.</p>
       ) : (
-        <ul className="food-list">
+        <ul className="meal-list">
           {shown.map((m) => (
-            <li key={m.id} className={`panel food-card accent-${m.accent.toLowerCase()}`}>
-              <div className="food-head">
-                <h2>{m.name}</h2>
-                <span>
-                  {m.isHot && <span className="badge hot">Hot #{m.hotOrder}</span>}{' '}
+            <li key={m.id} className={`panel meal-card accent-${m.accent.toLowerCase()}`}>
+              <div className="meal-cover">
+                {m.tag && <span className="meal-tag">{m.tag}</span>}
+                <span className="meal-badges">
+                  {m.isHot && <span className="badge hot">Hot #{m.hotOrder}</span>}
                   <span className={`badge ${m.published ? 'on' : ''}`}>{m.published ? 'Published' : 'Draft'}</span>
                 </span>
+                <span className="meal-cover-icon" aria-hidden="true">🍽</span>
               </div>
-              <p className="stat-note">{m.tag || 'No tag'} · {accentLabel(m.accent)}</p>
-              <ul className="variants">
-                {m.items.map((i) => <li key={i.variantId}>{formatItem(i, index)}</li>)}
-              </ul>
-              <p className="totals">{formatTotals(sumItems(m.items, index))}</p>
-              <div className="food-actions">
-                <button type="button" className="outline" onClick={() => setEditing(toDraft(m))}>Edit</button>
-                <button type="button" className="outline" onClick={() => void togglePublished(m)}>
-                  {m.published ? 'Unpublish' : 'Publish'}
-                </button>
-                {hotAvailable && m.published && (
-                  <button type="button" className="outline" onClick={() => void toggleHot(m)}>
-                    {m.isHot ? 'Remove from hot' : 'Make hot'}
-                  </button>
-                )}
-                {view === 'hot' && (
-                  <>
-                    <button type="button" className="icon-btn" aria-label={`Move ${m.name} earlier`}
-                      disabled={hotList[0]?.id === m.id} onClick={() => void moveHot(m, -1)}>▲</button>
-                    <button type="button" className="icon-btn" aria-label={`Move ${m.name} later`}
-                      disabled={hotList[hotList.length - 1]?.id === m.id} onClick={() => void moveHot(m, 1)}>▼</button>
-                  </>
-                )}
+              <div className="meal-body">
+                <div className="meal-info">
+                  <h2>{m.name}</h2>
+                  <p className="stat-note">Card colour: {accentLabel(m.accent)}</p>
+                  <ul className="meal-foods">
+                    {m.items.map((i) => <li key={i.variantId}>{formatItem(i, index)}</li>)}
+                  </ul>
+                </div>
+                <div className="meal-side">
+                  <p className="totals">{formatTotals(sumItems(m.items, index))}</p>
+                  <div className="food-actions">
+                    <button type="button" className="outline" onClick={() => setEditing(toDraft(m))}>Edit</button>
+                    <button type="button" className="outline" onClick={() => void togglePublished(m)}>
+                      {m.published ? 'Unpublish' : 'Publish'}
+                    </button>
+                    {hotAvailable && m.published && (
+                      <button type="button" className="outline" onClick={() => void toggleHot(m)}>
+                        {m.isHot ? 'Remove from hot' : 'Make hot'}
+                      </button>
+                    )}
+                    {view === 'hot' && (
+                      <>
+                        <button type="button" className="icon-btn" aria-label={`Move ${m.name} earlier`}
+                          disabled={hotList[0]?.id === m.id} onClick={() => void moveHot(m, -1)}>▲</button>
+                        <button type="button" className="icon-btn" aria-label={`Move ${m.name} later`}
+                          disabled={hotList[hotList.length - 1]?.id === m.id} onClick={() => void moveHot(m, 1)}>▼</button>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
             </li>
           ))}

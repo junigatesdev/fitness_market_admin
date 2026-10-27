@@ -187,3 +187,37 @@ select { padding: 10px 12px; font-size: 1rem; border: 1px solid var(--border); b
 .tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .tags li { font-size: .75rem; padding: 2px 8px; border-radius: 999px; background: #e1f3f6; color: var(--teal-dark); }
 .badge.hot { background: #fff1e0; color: #b35c00; font-weight: 600; }
+
+/* Meals: one full-width row per meal. Cover on top, information below. */
+.meal-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.meal-card { padding: 0; overflow: hidden; --tint: #eef2f3; --ink: #5d6f73; }
+.meal-card.accent-green { --tint: #dff3e8; --ink: #1f6b4a; }
+.meal-card.accent-ocean { --tint: #dcedf3; --ink: #1d6b82; }
+.meal-card.accent-blue { --tint: #e1e9fa; --ink: #34609f; }
+.meal-card.accent-neutral { --tint: #eef2f3; --ink: #5d6f73; }
+.meal-cover {
+  position: relative; height: 96px; background: var(--tint); color: var(--ink);
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 12px 16px;
+}
+.meal-tag {
+  background: #fff; color: var(--ink); font-size: .8rem; font-weight: 600;
+  padding: 4px 12px; border-radius: 999px; position: relative; z-index: 1;
+}
+.meal-badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; position: relative; z-index: 1; }
+.meal-cover-icon {
+  position: absolute; inset: 0; display: grid; place-items: center; font-size: 2.6rem; opacity: .35; pointer-events: none;
+}
+.meal-body { padding: 14px 20px 16px; display: grid; grid-template-columns: 1fr auto; gap: 8px 24px; align-items: start; }
+.meal-info h2 { margin: 0 0 2px; font-size: 1.15rem; overflow-wrap: anywhere; }
+.meal-foods { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.meal-foods li { font-size: .85rem; padding: 3px 10px; border-radius: 999px; background: #f1f5f6; }
+.meal-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; min-width: 0; }
+.meal-side .totals { margin: 0; font-size: 1.05rem; }
+.meal-side .food-actions { margin: 0; justify-content: flex-end; }
+
+@media (max-width: 700px) {
+  .meal-body { grid-template-columns: 1fr; padding: 12px 16px 14px; }
+  .meal-side { align-items: flex-start; }
+  .meal-side .food-actions { justify-content: flex-start; }
+  .meal-cover { height: 80px; }
+}
