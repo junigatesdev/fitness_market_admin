@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Food } from '../foods/model';
-import { MealDraft, MealRow, blankMeal, draftFoodNames, fromRow, newItem, toDraft, toPayload, validateMeal } from './model';
+import { MealDraft, MealRow, blankMeal, draftFoodNames, fromRow, hotMeals, newItem, toDraft, toPayload, validateMeal } from './model';
 import { formatTotals, indexVariants, scale, sumItems } from './nutrition';
 
 const chicken: Food = {
@@ -76,7 +76,7 @@ describe('payload and mapping', () => {
   it('builds the save_meal payload', () => {
     const d = draftWith([['v1', '150'], ['v4', '2']], { name: ' Bowl ', tag: ' High protein ', id: 'm1' });
     expect(toPayload(d)).toEqual({
-      id: 'm1', name: 'Bowl', tag: 'High protein', accent: 'GREEN', published: false,
+      id: 'm1', name: 'Bowl', tag: 'High protein', accent: 'GREEN', published: false, is_hot: false,
       items: [{ food_variant_id: 'v1', amount: 150 }, { food_variant_id: 'v4', amount: 2 }],
     });
   });
@@ -90,5 +90,34 @@ describe('payload and mapping', () => {
     expect(meal.items.map((i) => i.variantId)).toEqual(['v1', 'v3']);
     expect(toDraft(meal).items.map((i) => i.amount)).toEqual(['150', '200']);
     expect(newItem({ food: egg, variant: egg.variants[0] }).amount).toBe('1');
+  });
+});
+
+describe('hot meals', () => {
+  const meal = (id: string, name: string, isHot: boolean, hotOrder: number) => ({
+    id, name, tag: '', accent: 'GREEN' as const, published: true, isHot, hotOrder, items: [],
+  });
+
+  it('lists only hot meals, in their saved order', () => {
+    const list = [meal('a', 'A', true, 2), meal('b', 'B', false, 0), meal('c', 'C', true, 1), meal('d', 'D', true, 2)];
+    expect(hotMeals(list).map((m) => m.id)).toEqual(['c', 'a', 'd']);
+  });
+
+  it('a meal row without hot columns is not hot', () => {
+    const row: MealRow = { id: 'm1', name: 'X', tag: '', accent: 'GREEN', published: true, meal_items: [] };
+    expect(fromRow(row)).toMatchObject({ isHot: false, hotOrder: 0 });
+  });
+
+  it('reads the hot flag and order, and sends the flag when saving', () => {
+    const row: MealRow = { id: 'm1', name: 'X', tag: '', accent: 'GREEN', published: true, is_hot: true, hot_order: 3, meal_items: [] };
+    const meal = fromRow(row);
+    expect(meal).toMatchObject({ isHot: true, hotOrder: 3 });
+    expect(toPayload(toDraft(meal)).is_hot).toBe(true);
+  });
+
+  it('a hot meal must be published', () => {
+    const d = draftWith([['v1', '100']], { isHot: true, published: false });
+    expect(validateMeal(d, index).join()).toContain('A hot meal must be published');
+    expect(validateMeal(draftWith([['v1', '100']], { isHot: true, published: true }), index)).toEqual([]);
   });
 });

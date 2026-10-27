@@ -8,6 +8,8 @@ import { VariantRef, formatTotals, indexVariants, roundKcal, scale, sumItems } f
 interface MealEditorProps {
   initial: MealDraft;
   foods: Food[];
+  /** False when the database has no hot-meal columns yet: the Hot option is hidden. */
+  hotAvailable: boolean;
   onSave: (payload: ReturnType<typeof toPayload>) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
@@ -15,7 +17,7 @@ interface MealEditorProps {
 
 const MAX_RESULTS = 8;
 
-export function MealEditor({ initial, foods, onSave, onDelete, onClose }: MealEditorProps) {
+export function MealEditor({ initial, foods, hotAvailable, onSave, onDelete, onClose }: MealEditorProps) {
   const [draft, setDraft] = useState(initial);
   const [search, setSearch] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -112,9 +114,16 @@ export function MealEditor({ initial, foods, onSave, onDelete, onClose }: MealEd
 
           <label className="check">
             <input type="checkbox" checked={draft.published}
-              onChange={(e) => setDraft({ ...draft, published: e.target.checked })} />
+              onChange={(e) => setDraft({ ...draft, published: e.target.checked, isHot: e.target.checked && draft.isHot })} />
             Published (visible in the app)
           </label>
+          {hotAvailable && (
+            <label className="check">
+              <input type="checkbox" checked={draft.isHot} disabled={!draft.published}
+                onChange={(e) => setDraft({ ...draft, isHot: e.target.checked })} />
+              Hot on Home (shown at the top of the app’s Home screen)
+            </label>
+          )}
           {drafts.length > 0 && (
             <p className="warn" role="note">Publish these foods first, or untick Published: {drafts.join(', ')}.</p>
           )}

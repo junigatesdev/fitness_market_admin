@@ -3,7 +3,8 @@ import { listFoods } from '../foods/api';
 import { Food } from '../foods/model';
 import * as api from './api';
 import { MealEditor } from './MealEditor';
-import { Meal, MealDraft, accentLabel, blankMeal, draftFoodNames, formatItem, toDraft } from './model';
+import { Meal, MealDraft, accentLabel, blankMeal, draftFoodNames, formatItem, hotMeals, toDraft } from './model';
+import { moveItem } from '../categories/model';
 import { formatTotals, indexVariants, sumItems } from './nutrition';
 
 export function MealsPage() {
@@ -12,6 +13,8 @@ export function MealsPage() {
   const [loadError, setLoadError] = useState<string>();
   const [actionError, setActionError] = useState<string>();
   const [search, setSearch] = useState('');
+  const [view, setView] = useState<'all' | 'hot'>('all');
+  const [hotAvailable, setHotAvailable] = useState(true);
   const [editing, setEditing] = useState<MealDraft>();
 
   const load = useCallback(async () => {
@@ -19,7 +22,8 @@ export function MealsPage() {
     try {
       const [m, f] = await Promise.all([api.listMeals(), listFoods()]);
       setFoods(f);
-      setMeals(m);
+      setMeals(m.meals);
+      setHotAvailable(m.hotAvailable);
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : 'Could not load meals.');
     }
@@ -33,8 +37,33 @@ export function MealsPage() {
 
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return (meals ?? []).filter((m) => !q || m.name.toLowerCase().includes(q) || m.tag.toLowerCase().includes(q));
-  }, [meals, search]);
+    const base = view === 'hot' ? hotMeals(meals ?? []) : (meals ?? []);
+    return base.filter((m) => !q || m.name.toLowerCase().includes(q) || m.tag.toLowerCase().includes(q));
+  }, [meals, search, view]);
+
+  const hotList = useMemo(() => hotMeals(meals ?? []), [meals]);
+
+  async function toggleHot(meal: Meal) {
+    setActionError(undefined);
+    try {
+      const next = Math.max(0, ...hotList.map((m) => m.hotOrder)) + 1;
+      await api.setMealHot(meal.id, !meal.isHot, next);
+      await load();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Could not update.');
+    }
+  }
+
+  async function moveHot(meal: Meal, direction: -1 | 1) {
+    setActionError(undefined);
+    try {
+      const ids = moveItem(hotList, hotList.findIndex((m) => m.id === meal.id), direction).map((m) => m.id);
+      await api.reorderHotMeals(ids);
+      await load();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Could not reorder.');
+    }
+  }
 
   async function togglePublished(meal: Meal) {
     setActionError(undefined);
@@ -70,8 +99,21 @@ export function MealsPage() {
       <div className="toolbar">
         <input type="search" aria-label="Search meals" placeholder="Search meals" value={search}
           onChange={(e) => setSearch(e.target.value)} />
+        {hotAvailable && (
+          <select aria-label="Show meals" value={view} onChange={(e) => setView(e.target.value as 'all' | 'hot')}>
+            <option value="all">All meals</option>
+            <option value="hot">Hot meals ({hotList.length})</option>
+          </select>
+        )}
         <button type="button" className="primary add" onClick={() => setEditing(blankMeal())}>Add meal</button>
       </div>
+
+      {!hotAvailable && (
+        <p role="status" className="notice">
+          Hot meals aren’t set up in the database yet, so the Hot option is hidden. Meals still work. To turn it on, run
+          <code> 0006_hot_meals.sql</code> in the Supabase SQL Editor, then refresh.
+        </p>
+      )}
 
       {actionError && <p role="alert" className="form-error">{actionError}</p>}
 
@@ -97,7 +139,10 @@ export function MealsPage() {
             <li key={m.id} className={`panel food-card accent-${m.accent.toLowerCase()}`}>
               <div className="food-head">
                 <h2>{m.name}</h2>
-                <span className={`badge ${m.published ? 'on' : ''}`}>{m.published ? 'Published' : 'Draft'}</span>
+                <span>
+                  {m.isHot && <span className="badge hot">Hot #{m.hotOrder}</span>}{' '}
+                  <span className={`badge ${m.published ? 'on' : ''}`}>{m.published ? 'Published' : 'Draft'}</span>
+                </span>
               </div>
               <p className="stat-note">{m.tag || 'No tag'} · {accentLabel(m.accent)}</p>
               <ul className="variants">
@@ -109,6 +154,19 @@ export function MealsPage() {
                 <button type="button" className="outline" onClick={() => void togglePublished(m)}>
                   {m.published ? 'Unpublish' : 'Publish'}
                 </button>
+                {hotAvailable && m.published && (
+                  <button type="button" className="outline" onClick={() => void toggleHot(m)}>
+                    {m.isHot ? 'Remove from hot' : 'Make hot'}
+                  </button>
+                )}
+                {view === 'hot' && (
+                  <>
+                    <button type="button" className="icon-btn" aria-label={`Move ${m.name} earlier`}
+                      disabled={hotList[0]?.id === m.id} onClick={() => void moveHot(m, -1)}>▲</button>
+                    <button type="button" className="icon-btn" aria-label={`Move ${m.name} later`}
+                      disabled={hotList[hotList.length - 1]?.id === m.id} onClick={() => void moveHot(m, 1)}>▼</button>
+                  </>
+                )}
               </div>
             </li>
           ))}
@@ -119,6 +177,7 @@ export function MealsPage() {
         <MealEditor
           initial={editing}
           foods={foods}
+          hotAvailable={hotAvailable}
           onClose={() => setEditing(undefined)}
           onSave={handleSave}
           onDelete={editing.id ? () => handleDelete(editing.id!) : undefined}

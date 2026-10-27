@@ -19,6 +19,10 @@ export interface Meal {
   tag: string;
   accent: MealAccent;
   published: boolean;
+  /** Shown at the top of the app's Home screen. Only published meals can be hot. */
+  isHot: boolean;
+  /** Position among the hot meals (1 = first). 0 when not hot. */
+  hotOrder: number;
   items: MealItem[];
 }
 
@@ -28,6 +32,9 @@ export interface MealRow {
   tag: string;
   accent: MealAccent;
   published: boolean;
+  /** Absent when the hot-meal columns don't exist yet (migration 0006 not run). */
+  is_hot?: boolean;
+  hot_order?: number;
   meal_items: { food_variant_id: string; amount: number; position: number }[];
 }
 
@@ -38,6 +45,8 @@ export function fromRow(row: MealRow): Meal {
     tag: row.tag,
     accent: row.accent,
     published: row.published,
+    isHot: row.is_hot ?? false,
+    hotOrder: row.hot_order ?? 0,
     items: [...row.meal_items]
       .sort((a, b) => a.position - b.position)
       .map((i) => ({ variantId: i.food_variant_id, amount: Number(i.amount) })),
@@ -56,13 +65,14 @@ export interface MealDraft {
   tag: string;
   accent: MealAccent;
   published: boolean;
+  isHot: boolean;
   items: ItemDraft[];
 }
 
 let keyCounter = 0;
 const nextKey = () => `i${++keyCounter}`;
 
-export const blankMeal = (): MealDraft => ({ name: '', tag: '', accent: 'GREEN', published: false, items: [] });
+export const blankMeal = (): MealDraft => ({ name: '', tag: '', accent: 'GREEN', published: false, isHot: false, items: [] });
 
 /** A new item starts at the preparation's own basis amount (e.g. 100 g). */
 export function newItem(ref: VariantRef): ItemDraft {
@@ -76,6 +86,7 @@ export function toDraft(meal: Meal): MealDraft {
     tag: meal.tag,
     accent: meal.accent,
     published: meal.published,
+    isHot: meal.isHot,
     items: meal.items.map((i) => ({ key: nextKey(), variantId: i.variantId, amount: String(i.amount) })),
   };
 }
@@ -108,6 +119,7 @@ export function validateMeal(draft: MealDraft, index: Map<string, VariantRef>): 
     const amount = parseNumber(item.amount);
     if (!(Number.isFinite(amount) && amount > 0)) errors.push(`${label}: amount must be greater than 0.`);
   }
+  if (draft.isHot && !draft.published) errors.push('A hot meal must be published. Tick Published, or untick Hot.');
   if (draft.published) {
     const drafts = draftFoodNames(draft.items, index);
     if (drafts.length > 0) errors.push(`Publish these foods first, or untick Published: ${drafts.join(', ')}.`);
@@ -122,6 +134,7 @@ export function toPayload(draft: MealDraft) {
     tag: draft.tag.trim(),
     accent: draft.accent,
     published: draft.published,
+    is_hot: draft.isHot,
     items: draft.items.map((i) => ({ food_variant_id: i.variantId, amount: parseNumber(i.amount) })),
   };
 }
@@ -133,3 +146,8 @@ export function formatItem(item: MealItem, index: Map<string, VariantRef>): stri
 }
 
 export type { Food };
+
+/** Hot meals in the order the app shows them. */
+export function hotMeals(meals: Meal[]): Meal[] {
+  return meals.filter((m) => m.isHot).sort((a, b) => a.hotOrder - b.hotOrder || a.name.localeCompare(b.name));
+}

@@ -14,12 +14,13 @@ npm run build
 
 ## Supabase setup (once)
 
-1. **Run the SQL.** Easiest: paste all of `supabase/setup-all.sql` into a new query and Run (it is the five files below joined, for a new project). Or run the files separately, in order. Supabase dashboard → **SQL Editor** → New query → paste a file → **Run**. Repeat for each:
+1. **Run the SQL.** Easiest: paste all of `supabase/setup-all.sql` into a new query and Run (it is the six files below joined, for a new project). Or run the files separately, in order. Supabase dashboard → **SQL Editor** → New query → paste a file → **Run**. Repeat for each:
    1. `supabase/migrations/0001_init.sql`: tables and security rules
    2. `supabase/migrations/0002_save_food.sql`: saving a food and its preparations in one step
    3. `supabase/migrations/0003_meals.sql`: meals built from foods
    4. `supabase/migrations/0004_categories.sql`: managed categories
    5. `supabase/migrations/0005_world_areas.sql`: world areas (food cultures) as tags on foods
+   6. `supabase/migrations/0006_hot_meals.sql`: "hot" meals shown on the app's Home screen, with an order
 2. **Create your admin user.** **Authentication → Users → Add user** (your email + a strong password, tick *Auto Confirm User*).
 3. **Make it an admin.** In the SQL Editor run (with your email):
    ```sql

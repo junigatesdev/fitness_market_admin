@@ -23,8 +23,11 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
 - Cloud sessions **cannot reach Supabase** (network policy) and have no login. So you cannot read or write the live
   database. To change data or schema: write SQL **for the owner to paste in Supabase > SQL Editor**, and say which file to run.
   The owner can add Supabase's read-only MCP connector or allow the host to give a future session read access.
-- Schema files, run in order on a new project (`supabase/setup-all.sql` is 0001-0005 joined for one paste):
-  `0001_init` (admins, foods, food_variants, RLS) · `0002_save_food` · `0003_meals` · `0004_categories` · `0005_world_areas`.
+- Schema files, run in order on a new project (`supabase/setup-all.sql` is 0001-0006 joined for one paste):
+  `0001_init` (admins, foods, food_variants, RLS) · `0002_save_food` · `0003_meals` · `0004_categories` · `0005_world_areas` · `0006_hot_meals`.
+  **Ship order matters:** the portal deploys the moment it is pushed, so a portal change that needs new tables/columns must
+  keep working when the migration has not been run yet (degrade gracefully with a notice), and the owner must be told to run
+  the SQL first.
   New schema change = a **new numbered migration** (never edit one that was already run) AND append it to `setup-all.sql`.
 - Starter data: `seed-foods.sql` (115 foods, approximate values) and `seed-food-areas.sql`. Seeds must stay idempotent
   (re-running adds nothing) and must never overwrite the owner's own foods.
@@ -37,6 +40,9 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
   `basis_unit` GRAM|MILLILITER|PIECE|SERVING). Each food has one `category_id` (managed `categories`; "Food" is the
   undeletable default and receives foods of a deleted category) and any number of `world_areas` tags (`food_world_areas`).
 - `meals` -> `meal_items` -> `food_variants`. A meal's calories/macros are **always computed** from its foods, never typed.
+  `meals.is_hot` + `hot_order` mark the meals the app shows on Home, in that order; only **published** meals can be hot
+  (unpublishing clears it). Meal kinds: Fitness Market meals (this portal, read-only for customers), the customer's own
+  "My meals" (on the phone), and shared user meals (future; needs accounts).
   A food/preparation used by a meal **cannot be deleted** (blocked, naming the meals). A **published meal may only use
   published foods** (the app cannot read drafts).
 - RLS: anon and non-admins read **published** foods/meals only (variants, items, tags follow their parent); categories
