@@ -128,24 +128,22 @@ export function ExercisesPage() {
       ) : (
         <>
           <p className="stat-note" aria-live="polite">{shown.length} of {exercises.length} exercises</p>
-          <ul className="food-list">
+          <ul className="ex-list">
             {shown.map((x) => (
-              <li key={x.id} className="panel food-card">
-                <div className="food-head">
+              <li key={x.id} className="panel ex-row">
+                <div className="ex-main">
                   <h2>{x.name}</h2>
-                  <span className={`badge ${x.published ? 'on' : ''}`}>{x.published ? 'Published' : 'Draft'}</span>
+                  <p className="stat-note">
+                    {[groupName.get(x.muscleGroupId) ?? 'Other', x.equipment || null, DIFFICULTY_LABEL[x.difficulty]]
+                      .filter(Boolean).join(' · ')}
+                  </p>
                 </div>
-                <p className="stat-note">
-                  {[groupName.get(x.muscleGroupId) ?? 'Other', x.equipment || null, DIFFICULTY_LABEL[x.difficulty]]
-                    .filter(Boolean).join(' · ')}
-                </p>
                 <p className="ex-default">{formatDefault(x)}{x.usesWeight ? ' · with weight' : ''}</p>
-                {x.tagIds.length > 0 && (
-                  <ul className="tags" aria-label="Tags">
-                    {x.tagIds.map((id) => tagName.get(id)).filter((n): n is string => !!n).sort()
-                      .map((n) => <li key={n}>{n}</li>)}
-                  </ul>
-                )}
+                <ul className="tags ex-tags" aria-label="Tags">
+                  {x.tagIds.map((id) => tagName.get(id)).filter((n): n is string => !!n).sort()
+                    .map((n) => <li key={n}>{n}</li>)}
+                </ul>
+                <span className={`badge ${x.published ? 'on' : ''}`}>{x.published ? 'Published' : 'Draft'}</span>
                 <div className="food-actions">
                   <button type="button" className="outline" onClick={() => setEditing(toDraft(x))}>Edit</button>
                   <button type="button" className="outline" onClick={() => void togglePublished(x)}>
