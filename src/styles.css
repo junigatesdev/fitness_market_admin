@@ -221,3 +221,10 @@ select { padding: 10px 12px; font-size: 1rem; border: 1px solid var(--border); b
   .meal-side .food-actions { justify-content: flex-start; }
   .meal-cover { height: 80px; }
 }
+
+/* Exercises */
+.ex-default { margin: 0; font-weight: 600; color: var(--teal-dark); }
+.grid-2.equal { grid-template-columns: 1fr 1fr; }
+.managed { display: flex; flex-direction: column; gap: 8px; }
+.managed h2 { margin: 12px 0 0; }
+textarea { width: 100%; padding: 10px 12px; font: inherit; font-size: 1rem; border: 1px solid var(--border); border-radius: 8px; box-sizing: border-box; resize: vertical; }

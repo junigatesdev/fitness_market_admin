@@ -21,6 +21,7 @@ npm run build
    4. `supabase/migrations/0004_categories.sql`: managed categories
    5. `supabase/migrations/0005_world_areas.sql`: world areas (food cultures) as tags on foods
    6. `supabase/migrations/0006_hot_meals.sql`: "hot" meals shown on the app's Home screen, with an order
+   7. `supabase/migrations/0007_exercises.sql`: exercises with muscle groups and tags, for the app's Workout tab
 2. **Create your admin user.** **Authentication → Users → Add user** (your email + a strong password, tick *Auto Confirm User*).
 3. **Make it an admin.** In the SQL Editor run (with your email):
    ```sql
@@ -35,6 +36,7 @@ marked `published`.
 
 - `supabase/seed-foods.sql`: 115 general foods with 162 preparations (approximate reference values, review before relying on them). Safe to re-run.
 - `supabase/seed-food-areas.sql`: tags those foods with world areas (Global, Western, South Asian, ...). Run after `0005`. Safe to re-run.
+- `supabase/seed-exercises.sql`: 24 starter exercises (published) with muscle groups, equipment, defaults and tags. Run after `0007`. Safe to re-run.
 - `supabase/seed-meals.sql`: 6 meals built from the starter foods, published and hot. Run after `0006` and `seed-foods.sql`. Safe to re-run.
 
 ## Keys
