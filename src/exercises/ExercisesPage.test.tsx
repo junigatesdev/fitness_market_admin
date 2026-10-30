@@ -107,7 +107,7 @@ describe('ExerciseEditor', () => {
     render(<ExercisesPage />);
     await screen.findByText('Plank');
     await userEvent.click(screen.getByRole('button', { name: 'Add exercise' }));
-    const dialog = within(screen.getByRole('dialog'));
+    const dialog = within(screen.getByRole('form', { name: 'Exercise editor' }));
     await userEvent.type(dialog.getByLabelText('Exercise name'), 'Wall sit');
     await userEvent.selectOptions(dialog.getByLabelText('Main muscle group'), 'g-core');
     await userEvent.click(dialog.getByRole('radio', { name: 'Seconds' }));
@@ -116,23 +116,23 @@ describe('ExerciseEditor', () => {
     await userEvent.type(seconds, '40');
     await userEvent.click(dialog.getByLabelText('Customer logs weight for this exercise'));
     await userEvent.click(dialog.getByLabelText('Core'));
-    await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Save exercise' }));
 
     expect(api.saveExercise).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Wall sit', muscle_group_id: 'g-core', measure: 'SECONDS', default_sets: 3, default_target: 40,
       uses_weight: false, published: false, tag_ids: ['t-core'],
     }));
-    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(screen.queryByRole('form', { name: 'Exercise editor' })).toBeNull();
   });
 
   it('shows validation errors and does not save', async () => {
     render(<ExercisesPage />);
     await screen.findByText('Plank');
     await userEvent.click(screen.getByRole('button', { name: 'Add exercise' }));
-    const dialog = within(screen.getByRole('dialog'));
+    const dialog = within(screen.getByRole('form', { name: 'Exercise editor' }));
     await userEvent.type(dialog.getByLabelText('Exercise name'), 'plank');
     await userEvent.clear(dialog.getByLabelText('Sets'));
-    await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Save exercise' }));
     expect(dialog.getByText('Another exercise already has this name.')).toBeTruthy();
     expect(dialog.getByText(/Sets must be a whole number/)).toBeTruthy();
     expect(api.saveExercise).not.toHaveBeenCalled();
@@ -142,10 +142,10 @@ describe('ExerciseEditor', () => {
     render(<ExercisesPage />);
     await screen.findByText('Plank');
     await userEvent.click(within(card('Plank')).getByRole('button', { name: 'Edit' }));
-    const dialog = within(screen.getByRole('dialog'));
+    const dialog = within(screen.getByRole('form', { name: 'Exercise editor' }));
     await userEvent.clear(dialog.getByLabelText('Sets'));
     await userEvent.type(dialog.getByLabelText('Sets'), '5');
-    await userEvent.click(dialog.getByRole('button', { name: 'Save' }));
+    await userEvent.click(dialog.getByRole('button', { name: 'Save exercise' }));
     expect(api.saveExercise).toHaveBeenCalledWith(expect.objectContaining({ id: 'e2', default_sets: 5, tag_ids: ['t-core'] }));
   });
 
@@ -154,7 +154,7 @@ describe('ExerciseEditor', () => {
     render(<ExercisesPage />);
     await screen.findByText('Plank');
     await userEvent.click(within(card('Plank')).getByRole('button', { name: 'Edit' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Delete exercise' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
     expect(api.deleteExercise).toHaveBeenCalledWith('e2');
   });
 });

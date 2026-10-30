@@ -54,45 +54,49 @@ export function ExerciseEditor({ initial, groups, tags, otherNames, onSave, onDe
   }
 
   return (
-    <div className="modal-backdrop">
-      <form className="modal" role="dialog" aria-modal="true" aria-labelledby="editor-title" onSubmit={handleSubmit} noValidate>
-        <header className="modal-head">
-          <h2 id="editor-title">{isNew ? 'Add exercise' : 'Edit exercise'}</h2>
-          <button type="button" className="link" onClick={onClose} disabled={busy}>Cancel</button>
-        </header>
+    <form className="editor-page" aria-label="Exercise editor" onSubmit={handleSubmit} noValidate>
+      <header className="editor-head">
+        <button type="button" className="link" onClick={onClose} disabled={busy}>← Exercises</button>
+        <h2 id="editor-title">{isNew ? 'New exercise' : initial.name}</h2>
+        <span className="spacer" />
+        {onDelete && <button type="button" className="outline danger" onClick={handleDelete} disabled={busy}>Delete</button>}
+        <button type="submit" className="primary save" disabled={busy}>{busy ? 'Saving…' : 'Save exercise'}</button>
+      </header>
 
-        <div className="modal-body">
-          {errors.length > 0 && (
-            <ul role="alert" className="form-error error-list">
-              {errors.map((m) => <li key={m}>{m}</li>)}
-            </ul>
-          )}
+      {errors.length > 0 && (
+        <ul role="alert" className="form-error error-list">
+          {errors.map((m) => <li key={m}>{m}</li>)}
+        </ul>
+      )}
 
-          <label htmlFor="ex-name">Exercise name</label>
-          <input id="ex-name" ref={nameRef} value={draft.name} maxLength={100} placeholder="e.g. Incline dumbbell press"
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
+      <div className="editor-grid">
+        <div className="editor-col">
+          <section className="panel editor-card" aria-label="Basics">
+            <h3>Basics</h3>
+            <label htmlFor="ex-name">Exercise name</label>
+            <input id="ex-name" ref={nameRef} value={draft.name} maxLength={100} placeholder="e.g. Incline dumbbell press"
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })} />
 
-          <div className="grid-2 equal">
-            <div>
-              <label htmlFor="ex-group">Main muscle group</label>
-              <select id="ex-group" value={draft.muscleGroupId}
-                onChange={(e) => setDraft({ ...draft, muscleGroupId: e.target.value })}>
-                {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </select>
+            <div className="grid-2 equal">
+              <div>
+                <label htmlFor="ex-group">Main muscle group</label>
+                <select id="ex-group" value={draft.muscleGroupId}
+                  onChange={(e) => setDraft({ ...draft, muscleGroupId: e.target.value })}>
+                  {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="ex-equipment">Equipment</label>
+                <input id="ex-equipment" list="equipment" value={draft.equipment} maxLength={60}
+                  onChange={(e) => setDraft({ ...draft, equipment: e.target.value })} />
+                <datalist id="equipment">
+                  {EQUIPMENT_SUGGESTIONS.map((q) => <option key={q} value={q} />)}
+                </datalist>
+              </div>
             </div>
-            <div>
-              <label htmlFor="ex-equipment">Equipment</label>
-              <input id="ex-equipment" list="equipment" value={draft.equipment} maxLength={60}
-                onChange={(e) => setDraft({ ...draft, equipment: e.target.value })} />
-              <datalist id="equipment">
-                {EQUIPMENT_SUGGESTIONS.map((q) => <option key={q} value={q} />)}
-              </datalist>
-            </div>
-          </div>
 
-          <fieldset className="areas">
-            <legend>Difficulty</legend>
-            <div className="area-options" role="radiogroup" aria-label="Difficulty">
+            <span className="field-label" id="difficulty-label">Difficulty</span>
+            <div className="area-options" role="radiogroup" aria-labelledby="difficulty-label">
               {DIFFICULTIES.map((d) => (
                 <label key={d} className="check chip">
                   <input type="radio" name="difficulty" checked={draft.difficulty === d}
@@ -101,11 +105,11 @@ export function ExerciseEditor({ initial, groups, tags, otherNames, onSave, onDe
                 </label>
               ))}
             </div>
-          </fieldset>
+          </section>
 
-          <fieldset className="areas">
-            <legend>Tags</legend>
-            <p className="hint">Which workout days this exercise usually belongs to. Pick as many as fit.</p>
+          <section className="panel editor-card" aria-label="Tags">
+            <h3>Tags</h3>
+            <p className="hint">Which workout days this exercise usually belongs to. Pick any number.</p>
             {tags.length === 0 ? (
               <p className="hint">No tags yet. Add some under “Manage groups &amp; tags”.</p>
             ) : (
@@ -122,17 +126,21 @@ export function ExerciseEditor({ initial, groups, tags, otherNames, onSave, onDe
                 ))}
               </div>
             )}
-          </fieldset>
+          </section>
 
-          <label htmlFor="ex-howto">How to do it</label>
-          <textarea id="ex-howto" rows={4} value={draft.instructions} maxLength={2000}
-            onChange={(e) => setDraft({ ...draft, instructions: e.target.value })} />
+          <section className="panel editor-card" aria-label="How to do it">
+            <h3>How to do it</h3>
+            <label htmlFor="ex-howto" className="sr-only">How to do it</label>
+            <textarea id="ex-howto" rows={5} value={draft.instructions} maxLength={2000}
+              onChange={(e) => setDraft({ ...draft, instructions: e.target.value })} />
+          </section>
+        </div>
 
-          <h3>Defaults for customers</h3>
-          <p className="hint">Customers can change sets, reps and weight for themselves. That never changes these defaults.</p>
-          <fieldset className="areas">
-            <legend>Measured in</legend>
-            <div className="area-options" role="radiogroup" aria-label="Measured in">
+        <div className="editor-col">
+          <section className="panel editor-card" aria-label="Defaults for customers">
+            <h3>Defaults for customers</h3>
+            <span className="field-label" id="measure-label">Measured in</span>
+            <div className="area-options" role="radiogroup" aria-labelledby="measure-label">
               {(['REPS', 'SECONDS'] as const).map((m) => (
                 <label key={m} className="check chip">
                   <input type="radio" name="measure" checked={draft.measure === m}
@@ -141,40 +149,42 @@ export function ExerciseEditor({ initial, groups, tags, otherNames, onSave, onDe
                 </label>
               ))}
             </div>
-          </fieldset>
-          <div className="grid-2 equal">
-            <div>
-              <label htmlFor="ex-sets">Sets</label>
-              <input id="ex-sets" inputMode="numeric" value={draft.defaultSets}
-                onChange={(e) => setDraft({ ...draft, defaultSets: e.target.value })} />
+            <div className="grid-2 equal">
+              <div>
+                <label htmlFor="ex-sets">Sets</label>
+                <input id="ex-sets" inputMode="numeric" value={draft.defaultSets}
+                  onChange={(e) => setDraft({ ...draft, defaultSets: e.target.value })} />
+              </div>
+              <div>
+                <label htmlFor="ex-target">{unit}</label>
+                <input id="ex-target" inputMode="numeric" value={draft.defaultTarget}
+                  onChange={(e) => setDraft({ ...draft, defaultTarget: e.target.value })} />
+              </div>
             </div>
-            <div>
-              <label htmlFor="ex-target">{unit}</label>
-              <input id="ex-target" inputMode="numeric" value={draft.defaultTarget}
-                onChange={(e) => setDraft({ ...draft, defaultTarget: e.target.value })} />
-            </div>
-          </div>
-          <label className="check">
-            <input type="checkbox" checked={draft.usesWeight}
-              onChange={(e) => setDraft({ ...draft, usesWeight: e.target.checked })} />
-            Customer logs weight for this exercise
-          </label>
+            <label className="check">
+              <input type="checkbox" checked={draft.usesWeight}
+                onChange={(e) => setDraft({ ...draft, usesWeight: e.target.checked })} />
+              Customer logs weight for this exercise
+            </label>
+            <p className="hint">Customers can change sets, reps and weight for themselves. This never changes your defaults.</p>
+          </section>
 
-          <p className="hint">Pictures and GIFs come later. Every exercise shows the same placeholder image for now.</p>
+          <section className="panel editor-card" aria-label="Picture">
+            <h3>Picture</h3>
+            <div className="picture-placeholder" aria-hidden="true">🏋</div>
+            <p className="hint">Default placeholder for now. Pictures, angles and GIFs are added later.</p>
+          </section>
 
-          <label className="check">
-            <input type="checkbox" checked={draft.published}
-              onChange={(e) => setDraft({ ...draft, published: e.target.checked })} />
-            Published (visible in the app)
-          </label>
+          <section className="panel editor-card" aria-label="Status">
+            <h3>Status</h3>
+            <label className="check">
+              <input type="checkbox" checked={draft.published}
+                onChange={(e) => setDraft({ ...draft, published: e.target.checked })} />
+              Published (visible in the app)
+            </label>
+          </section>
         </div>
-
-        <footer className="modal-foot">
-          {onDelete && <button type="button" className="outline danger" onClick={handleDelete} disabled={busy}>Delete exercise</button>}
-          <span className="spacer" />
-          <button type="submit" className="primary" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
-        </footer>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

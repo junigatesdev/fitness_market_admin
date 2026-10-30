@@ -83,6 +83,20 @@ export function ExercisesPage() {
     );
   }
 
+  if (editing) {
+    return (
+      <ExerciseEditor
+        initial={editing}
+        groups={groups}
+        tags={tags}
+        otherNames={(exercises ?? []).filter((x) => x.id !== editing.id).map((x) => x.name)}
+        onClose={() => setEditing(undefined)}
+        onSave={handleSave}
+        onDelete={editing.id ? () => handleDelete(editing.id!) : undefined}
+      />
+    );
+  }
+
   return (
     <>
       <div className="toolbar">
@@ -156,17 +170,6 @@ export function ExercisesPage() {
         </>
       )}
 
-      {editing && (
-        <ExerciseEditor
-          initial={editing}
-          groups={groups}
-          tags={tags}
-          otherNames={(exercises ?? []).filter((x) => x.id !== editing.id).map((x) => x.name)}
-          onClose={() => setEditing(undefined)}
-          onSave={handleSave}
-          onDelete={editing.id ? () => handleDelete(editing.id!) : undefined}
-        />
-      )}
     </>
   );
 }
