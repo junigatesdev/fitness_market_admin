@@ -6,7 +6,7 @@ import {
 
 const EXERCISE: Exercise = {
   id: 'e1', name: 'Incline dumbbell press', muscleGroupId: 'g-chest', equipment: 'Dumbbell', difficulty: 'INTERMEDIATE',
-  instructions: 'Press.', measure: 'REPS', defaultSets: 3, defaultTarget: 8, usesWeight: true, published: true,
+  instructions: 'Press.', measure: 'REPS', defaultSets: 3, defaultTarget: 8, published: true,
   tagIds: ['t1', 't2'],
 };
 
@@ -54,14 +54,14 @@ describe('toPayload', () => {
     const payload = toPayload({ ...toDraft(EXERCISE), name: '  Row ', equipment: ' Cable ', defaultSets: '4', defaultTarget: '12' });
     expect(payload).toMatchObject({
       id: 'e1', name: 'Row', equipment: 'Cable', default_sets: 4, default_target: 12, measure: 'REPS',
-      uses_weight: true, published: true, muscle_group_id: 'g-chest', tag_ids: ['t1', 't2'],
+      published: true, muscle_group_id: 'g-chest', tag_ids: ['t1', 't2'],
     });
   });
 
-  it('a new exercise starts as an unpublished draft of 3 sets of 10 reps with weight', () => {
+  it('a new exercise starts as an unpublished draft of 3 sets of 10 reps', () => {
     const d = blankExercise('g1');
     expect(d.id).toBeUndefined();
-    expect(d).toMatchObject({ published: false, defaultSets: '3', defaultTarget: '10', usesWeight: true, measure: 'REPS' });
+    expect(d).toMatchObject({ published: false, defaultSets: '3', defaultTarget: '10', measure: 'REPS' });
   });
 });
 

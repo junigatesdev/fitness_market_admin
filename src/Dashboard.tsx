@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { AreasPage } from './areas/AreasPage';
 import { CategoriesPage } from './categories/CategoriesPage';
+import { DefaultDaysPage } from './defaultdays/DefaultDaysPage';
 import { ExercisesPage } from './exercises/ExercisesPage';
 import { FoodsPage } from './foods/FoodsPage';
 import { MealsPage } from './meals/MealsPage';
@@ -18,6 +19,7 @@ const NAV: NavItem[] = [
   { id: 'areas', label: 'World areas', icon: '🌍' },
   { id: 'meals', label: 'Meals', icon: '🍽' },
   { id: 'exercises', label: 'Exercises', icon: '🏋' },
+  { id: 'defaultdays', label: 'Default days', icon: '📅' },
   { id: 'users', label: 'Users', icon: '👥' },
   { id: 'settings', label: 'Settings', icon: '⚙' },
 ];
@@ -102,7 +104,7 @@ export function Dashboard({ username, onSignOut }: DashboardProps) {
         </header>
 
         <main className="content">
-          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : page === 'exercises' ? <ExercisesPage /> : page === 'categories' ? <CategoriesPage /> : page === 'areas' ? <AreasPage /> : <ComingSoon title={current.label} />}
+          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : page === 'exercises' ? <ExercisesPage /> : page === 'defaultdays' ? <DefaultDaysPage /> : page === 'categories' ? <CategoriesPage /> : page === 'areas' ? <AreasPage /> : <ComingSoon title={current.label} />}
         </main>
       </div>
     </div>

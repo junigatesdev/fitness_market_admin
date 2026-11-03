@@ -258,3 +258,24 @@ textarea { width: 100%; padding: 10px 12px; font: inherit; font-size: 1rem; bord
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .picture-placeholder { height: 150px; border-radius: 12px; background: #e8f3f5; display: grid; place-items: center; font-size: 2.5rem; }
 @media (max-width: 900px) { .editor-grid { grid-template-columns: 1fr; } }
+
+/* Default days */
+.grow { flex: 1 1 320px; margin: 0; }
+.day-row { grid-template-columns: 34px minmax(0, 2fr) minmax(0, 2fr) auto auto; }
+.day-pos { width: 34px; height: 34px; border-radius: 50%; background: #e8f3f5; color: var(--teal-dark); display: grid; place-items: center; font-weight: 800; font-size: .9rem; }
+.tree-list { list-style: none; margin: 0; padding: 0; }
+.tree-list.root { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.tree-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-top: 1px solid #e6eef0; background: #fff; }
+.tree-list.root > li:first-child > .tree-row, .tree-list.root > .tree-row:first-child { border-top: 0; }
+.tree-row.group { background: #f2f8f9; }
+.tree-row.group.selected { background: #dff0f3; box-shadow: inset 3px 0 0 var(--teal); }
+.tree-name { font-size: .95rem; font-weight: 600; flex: 1; overflow-wrap: anywhere; }
+.tree-input { flex: 1 1 140px; width: auto; font-weight: 700; padding: 6px 10px; }
+.tree-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal); flex: none; }
+.tree-pick { background: none; border: 0; color: var(--teal); font-size: 1.1rem; cursor: pointer; padding: 4px; }
+.tree-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; }
+.tree-add { padding-top: 8px; }
+.warn-badge { background: #fff4e5; color: #8a5300; }
+.pick-list { list-style: none; margin: 0; padding: 0; max-height: 380px; overflow-y: auto; }
+.pick-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid #e6eef0; font-size: .95rem; }
+@media (max-width: 900px) { .day-row { grid-template-columns: 34px 1fr auto; } }

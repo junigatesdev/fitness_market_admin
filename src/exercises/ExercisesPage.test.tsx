@@ -25,11 +25,11 @@ const TAGS = [
 const EXERCISES: Exercise[] = [
   {
     id: 'e1', name: 'Incline dumbbell press', muscleGroupId: 'g-chest', equipment: 'Dumbbell', difficulty: 'INTERMEDIATE',
-    instructions: '', measure: 'REPS', defaultSets: 3, defaultTarget: 8, usesWeight: true, published: true, tagIds: ['t-chest'],
+    instructions: '', measure: 'REPS', defaultSets: 3, defaultTarget: 8, published: true, tagIds: ['t-chest'],
   },
   {
     id: 'e2', name: 'Plank', muscleGroupId: 'g-core', equipment: 'Bodyweight', difficulty: 'BEGINNER',
-    instructions: '', measure: 'SECONDS', defaultSets: 3, defaultTarget: 45, usesWeight: false, published: false, tagIds: ['t-core'],
+    instructions: '', measure: 'SECONDS', defaultSets: 3, defaultTarget: 45, published: false, tagIds: ['t-core'],
   },
 ];
 
@@ -56,7 +56,7 @@ describe('ExercisesPage list', () => {
     await screen.findByText('Incline dumbbell press');
     const press = within(card('Incline dumbbell press'));
     expect(press.getByText('Chest · Dumbbell · Intermediate')).toBeTruthy();
-    expect(press.getByText('3 × 8 reps · with weight')).toBeTruthy();
+    expect(press.getByText('3 × 8 reps')).toBeTruthy();
     expect(press.getByText('Chest day')).toBeTruthy();
     expect(press.getByText('Published')).toBeTruthy();
     const plank = within(card('Plank'));
@@ -114,13 +114,12 @@ describe('ExerciseEditor', () => {
     const seconds = dialog.getByRole('textbox', { name: 'Seconds' });
     await userEvent.clear(seconds);
     await userEvent.type(seconds, '40');
-    await userEvent.click(dialog.getByLabelText('Customer logs weight for this exercise'));
     await userEvent.click(dialog.getByLabelText('Core'));
     await userEvent.click(dialog.getByRole('button', { name: 'Save exercise' }));
 
     expect(api.saveExercise).toHaveBeenCalledWith(expect.objectContaining({
       name: 'Wall sit', muscle_group_id: 'g-core', measure: 'SECONDS', default_sets: 3, default_target: 40,
-      uses_weight: false, published: false, tag_ids: ['t-core'],
+      published: false, tag_ids: ['t-core'],
     }));
     expect(screen.queryByRole('form', { name: 'Exercise editor' })).toBeNull();
   });

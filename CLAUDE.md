@@ -23,13 +23,13 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
 - Cloud sessions **cannot reach Supabase** (network policy) and have no login. So you cannot read or write the live
   database. To change data or schema: write SQL **for the owner to paste in Supabase > SQL Editor**, and say which file to run.
   The owner can add Supabase's read-only MCP connector or allow the host to give a future session read access.
-- Schema files, run in order on a new project (`supabase/setup-all.sql` is 0001-0007 joined for one paste):
-  `0001_init` (admins, foods, food_variants, RLS) · `0002_save_food` · `0003_meals` · `0004_categories` · `0005_world_areas` · `0006_hot_meals` · `0007_exercises`.
+- Schema files, run in order on a new project (`supabase/setup-all.sql` is 0001-0008 joined for one paste):
+  `0001_init` (admins, foods, food_variants, RLS) · `0002_save_food` · `0003_meals` · `0004_categories` · `0005_world_areas` · `0006_hot_meals` · `0007_exercises` · `0008_default_days`.
   **Ship order matters:** the portal deploys the moment it is pushed, so a portal change that needs new tables/columns must
   keep working when the migration has not been run yet (degrade gracefully with a notice), and the owner must be told to run
   the SQL first.
   New schema change = a **new numbered migration** (never edit one that was already run) AND append it to `setup-all.sql`.
-- Starter data: `seed-foods.sql` (115 foods, approximate values), `seed-food-areas.sql` `seed-meals.sql` (6 meals) and `seed-exercises.sql` (24 exercises). Seeds must stay idempotent
+- Starter data: `seed-foods.sql` (115 foods, approximate values), `seed-food-areas.sql` `seed-meals.sql` (6 meals) and `seed-exercises.sql` (24 exercises) and `seed-default-days.sql` (4 default workout days). Seeds must stay idempotent
   (re-running adds nothing) and must never overwrite the owner's own foods.
 - **Test SQL before handing it over.** Postgres 16 server binaries exist at `/usr/lib/postgresql/16/bin` (start as user
   `postgres`). Create stand-ins for Supabase (`anon` / `authenticated` roles, an `auth.users` table, `auth.uid()` reading
@@ -56,11 +56,17 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
   `uses_weight`. Anon and non-admins read **published** exercises only. Writes go through `save_exercise` (replaces
   the tags in one transaction), `delete_muscle_group`, `reorder_*`.
 - The customer's own sets/reps/weight and logged workouts live on the phone and are snapshots; nothing here stores them.
+- **Default days** (`default_days`, `default_day_nodes`, migration 0008): a tree per day, where a node is a GROUP (name, may
+  contain nodes) or an EXERCISE (leaf). The first level is usually the muscle groups. Published days are copied onto a
+  customer's phone **once, the first time the app opens**; after that they are the customer's own and nothing here reaches
+  existing customers. Unpublishing an exercise leaves it in the day (the portal tags it "Draft, will be skipped"); the app
+  skips exercises it cannot see. Deleting an exercise removes it from the days. Writes go through `save_default_day`.
+- Exercises no longer have a weight setting in the portal (`exercises.uses_weight` stays in the table, unused).
 - No pictures yet (the app shows one placeholder). Storage for pictures/GIFs is still undecided.
 
 ## Portal
 - Login = real Supabase email/password **and** a row in `public.admins`. There is no temporary login.
-- Screens: Foods, Categories, World areas, Meals, Exercises (real); Dashboard (sample numbers); Users, Settings (placeholders).
+- Screens: Foods, Categories, World areas, Meals, Exercises, Default days (real); Dashboard (sample numbers); Users, Settings (placeholders).
 - Commands: `npm install`, `npm run dev` (http://localhost:5173/fitness_market_admin/), `npm test`, `npm run typecheck`, `npm run build`.
 - Deploy: `.github/workflows/deploy-pages.yml` publishes to GitHub Pages **from the `claude/admiring-cannon-thmsax`
   branch** (the Pages environment only allows `main` and that branch). Pages needs a public repo on the free plan.

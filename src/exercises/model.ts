@@ -47,7 +47,6 @@ export interface Exercise {
   defaultSets: number;
   /** Reps per set, or seconds per set, depending on `measure`. */
   defaultTarget: number;
-  usesWeight: boolean;
   published: boolean;
   tagIds: string[];
 }
@@ -63,7 +62,6 @@ export interface ExerciseRow {
   measure: Measure;
   default_sets: number;
   default_target: number;
-  uses_weight: boolean;
   published: boolean;
   exercise_tag_links: { tag_id: string }[];
 }
@@ -92,7 +90,6 @@ export function fromRow(row: ExerciseRow): Exercise {
     measure: row.measure,
     defaultSets: row.default_sets,
     defaultTarget: row.default_target,
-    usesWeight: row.uses_weight,
     published: row.published,
     tagIds: row.exercise_tag_links.map((l) => l.tag_id),
   };
@@ -146,20 +143,19 @@ export interface ExerciseDraft {
   measure: Measure;
   defaultSets: string;
   defaultTarget: string;
-  usesWeight: boolean;
   published: boolean;
   tagIds: string[];
 }
 
 export const blankExercise = (muscleGroupId: string): ExerciseDraft => ({
   name: '', muscleGroupId, equipment: '', difficulty: 'BEGINNER', instructions: '', measure: 'REPS',
-  defaultSets: '3', defaultTarget: '10', usesWeight: true, published: false, tagIds: [],
+  defaultSets: '3', defaultTarget: '10', published: false, tagIds: [],
 });
 
 export const toDraft = (e: Exercise): ExerciseDraft => ({
   id: e.id, name: e.name, muscleGroupId: e.muscleGroupId, equipment: e.equipment, difficulty: e.difficulty,
   instructions: e.instructions, measure: e.measure, defaultSets: String(e.defaultSets),
-  defaultTarget: String(e.defaultTarget), usesWeight: e.usesWeight, published: e.published, tagIds: [...e.tagIds],
+  defaultTarget: String(e.defaultTarget), published: e.published, tagIds: [...e.tagIds],
 });
 
 /** A whole number from text, or NaN. */
@@ -200,7 +196,6 @@ export function toPayload(d: ExerciseDraft) {
     measure: d.measure,
     default_sets: parseWhole(d.defaultSets),
     default_target: parseWhole(d.defaultTarget),
-    uses_weight: d.usesWeight,
     published: d.published,
     tag_ids: d.tagIds,
   };

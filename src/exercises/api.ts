@@ -11,7 +11,7 @@ function fail(action: string, error: { message: string }): never {
 }
 
 const EXERCISE_COLUMNS =
-  'id, name, muscle_group_id, equipment, difficulty, instructions, measure, default_sets, default_target, uses_weight, published, exercise_tag_links(tag_id)';
+  'id, name, muscle_group_id, equipment, difficulty, instructions, measure, default_sets, default_target, published, exercise_tag_links(tag_id)';
 
 export async function listExercises(): Promise<Exercise[]> {
   const exercises: Exercise[] = [];

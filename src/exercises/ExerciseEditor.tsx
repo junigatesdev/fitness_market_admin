@@ -161,12 +161,7 @@ export function ExerciseEditor({ initial, groups, tags, otherNames, onSave, onDe
                   onChange={(e) => setDraft({ ...draft, defaultTarget: e.target.value })} />
               </div>
             </div>
-            <label className="check">
-              <input type="checkbox" checked={draft.usesWeight}
-                onChange={(e) => setDraft({ ...draft, usesWeight: e.target.checked })} />
-              Customer logs weight for this exercise
-            </label>
-            <p className="hint">Customers can change sets, reps and weight for themselves. This never changes your defaults.</p>
+            <p className="hint">Shown to customers as a plain tick list; they tick an exercise when it is done.</p>
           </section>
 
           <section className="panel editor-card" aria-label="Picture">

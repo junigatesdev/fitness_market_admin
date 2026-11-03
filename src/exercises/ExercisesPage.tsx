@@ -152,7 +152,7 @@ export function ExercisesPage() {
                       .filter(Boolean).join(' · ')}
                   </p>
                 </div>
-                <p className="ex-default">{formatDefault(x)}{x.usesWeight ? ' · with weight' : ''}</p>
+                <p className="ex-default">{formatDefault(x)}</p>
                 <ul className="tags ex-tags" aria-label="Tags">
                   {x.tagIds.map((id) => tagName.get(id)).filter((n): n is string => !!n).sort()
                     .map((n) => <li key={n}>{n}</li>)}
