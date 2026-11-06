@@ -43,6 +43,7 @@ marked `published`.
 - `supabase/seed-default-days.sql`: 4 starter days (Upper body, Lower body, Push, Pull) from the starter exercises. Run after `0008` and `seed-exercises.sql`. Safe to re-run.
 - `supabase/seed-drinks.sql`: 4 drinks (Chay / Milk tea, Black tea, Coffee, Latte) using the starter milk and sugar foods. Run after `0009` and `seed-foods.sql`. Safe to re-run.
 - `supabase/seed-piece-sizes.sql`: piece sizes for 15 starter preparations (egg white, egg, roti, naan, almonds, milk glass ...). Run after `0010` and `seed-foods.sql`. Safe to re-run; never changes a piece size you set.
+- `supabase/seed-drink-foods.sql`: milk tea (chay), milk coffee and latte as normal foods (per 100 ml, 1 cup = 250/200/300 ml, with 0-3 teaspoons of sugar) so they show up in the Foods list and in the app's search. Run after `0010` and `seed-foods.sql`. Safe to re-run.
 - `supabase/seed-meals.sql`: 6 meals built from the starter foods, published and hot. Run after `0006` and `seed-foods.sql`. Safe to re-run.
 
 ## Keys
