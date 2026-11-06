@@ -70,7 +70,7 @@ describe('payload and mapping', () => {
     d.variants[0].fatG = '3,6';
     expect(toPayload(d)).toEqual({
       id: null, name: 'Chicken breast', category_id: 'cat-food', area_ids: [], published: false,
-      variants: [{ id: null, name: 'Grilled', basis_amount: 100, basis_unit: 'GRAM', calories: 165, protein_g: 31, carbs_g: 0, fat_g: 3.6 }],
+      variants: [{ id: null, name: 'Grilled', basis_amount: 100, basis_unit: 'GRAM', calories: 165, protein_g: 31, carbs_g: 0, fat_g: 3.6, piece_name: null, piece_amount: null }],
     });
   });
 
@@ -95,5 +95,52 @@ describe('payload and mapping', () => {
 
   it('formats labels', () => {
     expect(formatVariant(fromRow(row).variants[0])).toBe('Boiled: 96 kcal per 100 g');
+  });
+});
+
+describe('piece size', () => {
+  const withPiece = (name: string, amount: string, unit: 'GRAM' | 'MILLILITER' | 'PIECE' = 'GRAM') => {
+    const d = valid();
+    d.variants[0] = { ...d.variants[0], basisUnit: unit, pieceName: name, pieceAmount: amount };
+    return d;
+  };
+
+  it('is optional', () => expect(validateDraft(valid())).toEqual([]));
+
+  it('is sent with the preparation, and cleared when the name is empty', () => {
+    expect(toPayload(withPiece(' egg white ', '33')).variants[0]).toMatchObject({ piece_name: 'egg white', piece_amount: 33 });
+    expect(toPayload(withPiece('', '')).variants[0]).toMatchObject({ piece_name: null, piece_amount: null });
+  });
+
+  it('accepts a comma decimal and a millilitre preparation', () => {
+    const d = withPiece('almond', '1,2');
+    expect(validateDraft(d)).toEqual([]);
+    expect(toPayload(d).variants[0].piece_amount).toBe(1.2);
+    expect(validateDraft(withPiece('glass', '250', 'MILLILITER'))).toEqual([]);
+  });
+
+  it('needs both a name and a size above zero', () => {
+    expect(validateDraft(withPiece('', '33')).join()).toMatch(/what one piece is called/);
+    expect(validateDraft(withPiece('egg white', '')).join()).toMatch(/must weigh/);
+    expect(validateDraft(withPiece('egg white', '0')).join()).toMatch(/must weigh/);
+    expect(validateDraft(withPiece('egg white', '6000')).join()).toMatch(/must weigh/);
+    expect(validateDraft(withPiece('x'.repeat(31), '5')).join()).toMatch(/at most 30/);
+  });
+
+  it('is refused on a food counted in pieces or servings', () => {
+    expect(validateDraft(withPiece('slice', '30', 'PIECE')).join()).toMatch(/only works for foods measured in g or ml/);
+  });
+
+  it('is read from the database row, and absent rows have none', () => {
+    const food = fromRow({
+      id: 'f', name: 'Egg white', category_id: 'c', published: true,
+      food_variants: [
+        { id: 'v1', name: 'Raw', basis_amount: 100, basis_unit: 'GRAM', calories: 52, protein_g: 11, carbs_g: 0.7, fat_g: 0.2, piece_name: 'egg white', piece_amount: 33 },
+        { id: 'v2', name: 'Boiled', basis_amount: 100, basis_unit: 'GRAM', calories: 50, protein_g: 11, carbs_g: 0.7, fat_g: 0.2, piece_name: null, piece_amount: null },
+      ],
+    });
+    expect(food.variants.find((v) => v.id === 'v1')).toMatchObject({ pieceName: 'egg white', pieceAmount: 33 });
+    expect(food.variants.find((v) => v.id === 'v2')?.pieceName).toBeUndefined();
+    expect(toDraft(food).variants.map((v) => v.pieceAmount).sort()).toEqual(['', '33']);
   });
 });

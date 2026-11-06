@@ -7,14 +7,18 @@ function fail(action: string, error: { message: string }): never {
   throw new Error(`${action}: ${error.message}`);
 }
 
-const VARIANTS = 'food_variants(id, name, basis_amount, basis_unit, calories, protein_g, carbs_g, fat_g)';
-const WITH_AREAS = `id, name, category_id, published, food_world_areas(area_id), ${VARIANTS}`;
-const WITHOUT_AREAS = `id, name, category_id, published, ${VARIANTS}`;
+const variantsSelect = (pieces: boolean) =>
+  `food_variants(id, name, basis_amount, basis_unit, calories, protein_g, carbs_g, fat_g${pieces ? ', piece_name, piece_amount' : ''})`;
+const selectFor = (areas: boolean, pieces: boolean) =>
+  `id, name, category_id, published, ${areas ? 'food_world_areas(area_id), ' : ''}${variantsSelect(pieces)}`;
 
 /** The world-area tables aren't in the database yet (migration 0005 not run), or its schema cache is stale. */
 class AreaTablesMissing extends Error {}
 
-async function fetchAllFoods(select: string, detectMissingAreas: boolean): Promise<Food[]> {
+/** The piece-size columns aren't in the database yet (migration 0010 not run), or the schema cache is stale. */
+class PieceColumnsMissing extends Error {}
+
+async function fetchAllFoods(select: string, detectMissingAreas: boolean, detectMissingPieces: boolean): Promise<Food[]> {
   const foods: Food[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
@@ -26,6 +30,7 @@ async function fetchAllFoods(select: string, detectMissingAreas: boolean): Promi
       .returns<FoodRow[]>();
     if (error) {
       if (detectMissingAreas && error.message.includes('food_world_areas')) throw new AreaTablesMissing(error.message);
+      if (detectMissingPieces && /piece_name|piece_amount/.test(error.message)) throw new PieceColumnsMissing(error.message);
       fail('Could not load foods', error);
     }
     foods.push(...data.map(fromRow));
@@ -33,13 +38,21 @@ async function fetchAllFoods(select: string, detectMissingAreas: boolean): Promi
   }
 }
 
-/** Foods with their world-area tags. If the area tables don't exist yet, foods still load (without tags). */
+/**
+ * Foods with their world-area tags and piece sizes. If the area tables (0005) or the piece columns (0010) don't exist
+ * yet, foods still load without them.
+ */
 export async function listFoods(): Promise<Food[]> {
-  try {
-    return await fetchAllFoods(WITH_AREAS, true);
-  } catch (e) {
-    if (e instanceof AreaTablesMissing) return fetchAllFoods(WITHOUT_AREAS, false);
-    throw e;
+  let areas = true;
+  let pieces = true;
+  for (;;) {
+    try {
+      return await fetchAllFoods(selectFor(areas, pieces), areas, pieces);
+    } catch (e) {
+      if (e instanceof AreaTablesMissing && areas) areas = false;
+      else if (e instanceof PieceColumnsMissing && pieces) pieces = false;
+      else throw e;
+    }
   }
 }
 

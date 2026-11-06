@@ -3,7 +3,7 @@ import { Category } from '../categories/model';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import {
   FoodDraft, PREPARATION_SUGGESTIONS, QUANTITY_UNITS, UNIT_LABEL, VariantDraft,
-  blankVariant, caloriesLookOff, toPayload, validateDraft,
+  blankVariant, canHavePiece, caloriesLookOff, toPayload, validateDraft,
 } from './model';
 
 interface FoodEditorProps {
@@ -151,6 +151,21 @@ export function FoodEditor({ initial, categories, areas, onSave, onDelete, onClo
                   </div>
                 ))}
               </div>
+              {canHavePiece(v.basisUnit) && (
+                <div className="grid-4">
+                  <div>
+                    <label htmlFor={`${v.key}-piece-name`}>One piece is called (optional)</label>
+                    <input id={`${v.key}-piece-name`} value={v.pieceName} maxLength={30} placeholder="e.g. egg white"
+                      onChange={(e) => setVariant(v.key, { pieceName: e.target.value })} />
+                  </div>
+                  <div>
+                    <label htmlFor={`${v.key}-piece-amount`}>One piece weighs ({UNIT_LABEL[v.basisUnit]})</label>
+                    <input id={`${v.key}-piece-amount`} inputMode="decimal" value={v.pieceAmount} placeholder="e.g. 33"
+                      onChange={(e) => setVariant(v.key, { pieceAmount: e.target.value })} />
+                  </div>
+                  <p className="hint">With a piece size the app lets customers count pieces (2 egg white) as well as weigh.</p>
+                </div>
+              )}
               {caloriesLookOff(v) && (
                 <p className="warn" role="note">
                   Calories don’t match the protein, carbs and fat entered. Double-check before saving.

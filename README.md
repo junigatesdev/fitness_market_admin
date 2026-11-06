@@ -24,6 +24,7 @@ npm run build
    7. `supabase/migrations/0007_exercises.sql`: exercises with muscle groups and tags, for the app's Workout tab
    8. `supabase/migrations/0008_default_days.sql`: default workout days (a tree of groups and exercises) copied to new customers
    9. `supabase/migrations/0009_drinks.sql`: drinks (tea, milk tea, coffee) with cup size, milk and sugar choices, for the app's Add food > Drinks row
+   10. `supabase/migrations/0010_piece_sizes.sql`: optional piece size per preparation (one egg white = 33 g), so the app can count pieces
 2. **Create your admin user.** **Authentication → Users → Add user** (your email + a strong password, tick *Auto Confirm User*).
 3. **Make it an admin.** In the SQL Editor run (with your email):
    ```sql
@@ -41,6 +42,7 @@ marked `published`.
 - `supabase/seed-exercises.sql`: 24 starter exercises (published) with muscle groups, equipment, defaults and tags. Run after `0007`. Safe to re-run.
 - `supabase/seed-default-days.sql`: 4 starter days (Upper body, Lower body, Push, Pull) from the starter exercises. Run after `0008` and `seed-exercises.sql`. Safe to re-run.
 - `supabase/seed-drinks.sql`: 4 drinks (Chay / Milk tea, Black tea, Coffee, Latte) using the starter milk and sugar foods. Run after `0009` and `seed-foods.sql`. Safe to re-run.
+- `supabase/seed-piece-sizes.sql`: piece sizes for 15 starter preparations (egg white, egg, roti, naan, almonds, milk glass ...). Run after `0010` and `seed-foods.sql`. Safe to re-run; never changes a piece size you set.
 - `supabase/seed-meals.sql`: 6 meals built from the starter foods, published and hot. Run after `0006` and `seed-foods.sql`. Safe to re-run.
 
 ## Keys

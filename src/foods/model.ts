@@ -23,6 +23,9 @@ export interface Variant {
   proteinG: number;
   carbsG: number;
   fatG: number;
+  /** What one piece is called ("egg white") and its size in [basisUnit]; both set or both absent (migration 0010). */
+  pieceName?: string;
+  pieceAmount?: number;
 }
 
 export interface Food {
@@ -45,6 +48,9 @@ export interface VariantRow {
   protein_g: number;
   carbs_g: number;
   fat_g: number;
+  /** Absent when migration 0010 has not been run. */
+  piece_name?: string | null;
+  piece_amount?: number | null;
 }
 export interface FoodRow {
   id: string;
@@ -73,6 +79,7 @@ export function fromRow(row: FoodRow): Food {
         proteinG: Number(v.protein_g),
         carbsG: Number(v.carbs_g),
         fatG: Number(v.fat_g),
+        ...(v.piece_name && v.piece_amount != null ? { pieceName: v.piece_name, pieceAmount: Number(v.piece_amount) } : {}),
       }))
       .sort((a, b) => a.name.localeCompare(b.name)),
   };
@@ -90,6 +97,9 @@ export interface VariantDraft {
   proteinG: string;
   carbsG: string;
   fatG: string;
+  /** One piece ("egg white") and what it weighs; both empty when the preparation has no piece size. */
+  pieceName: string;
+  pieceAmount: string;
 }
 
 export interface FoodDraft {
@@ -106,7 +116,7 @@ const nextKey = () => `v${++keyCounter}`;
 
 export const blankVariant = (): VariantDraft => ({
   key: nextKey(), name: '', basisAmount: '100', basisUnit: 'GRAM',
-  calories: '', proteinG: '', carbsG: '', fatG: '',
+  calories: '', proteinG: '', carbsG: '', fatG: '', pieceName: '', pieceAmount: '',
 });
 
 export const blankFood = (categoryId: string): FoodDraft => ({
@@ -123,6 +133,7 @@ export function toDraft(food: Food): FoodDraft {
     variants: food.variants.map((v) => ({
       key: nextKey(), id: v.id, name: v.name, basisAmount: String(v.basisAmount), basisUnit: v.basisUnit,
       calories: String(v.calories), proteinG: String(v.proteinG), carbsG: String(v.carbsG), fatG: String(v.fatG),
+      pieceName: v.pieceName ?? '', pieceAmount: v.pieceAmount === undefined ? '' : String(v.pieceAmount),
     })),
   };
 }
@@ -134,6 +145,12 @@ export function parseNumber(text: string): number {
 }
 
 const validAmount = (n: number) => Number.isFinite(n) && n >= 0;
+
+/** Same limits as migration 0010. */
+export const PIECE_NAME_MAX = 30;
+export const PIECE_AMOUNT_MAX = 5000;
+/** A piece size only makes sense for foods counted in grams or millilitres. */
+export const canHavePiece = (unit: QuantityUnit) => unit === 'GRAM' || unit === 'MILLILITER';
 
 /** Same rules as the app's FoodValidator: reject impossible values only. Returns messages for the admin. */
 export function validateDraft(draft: FoodDraft): string[] {
@@ -161,6 +178,17 @@ export function validateDraft(draft: FoodDraft): string[] {
     for (const [n, text] of nutrients) {
       if (!validAmount(parseNumber(text))) errors.push(`${label}: ${n} must be a number, 0 or more.`);
     }
+    const pieceName = v.pieceName.trim();
+    const pieceText = v.pieceAmount.trim();
+    if (pieceName || pieceText) {
+      if (!canHavePiece(v.basisUnit)) errors.push(`${label}: a piece size only works for foods measured in g or ml.`);
+      if (!pieceName) errors.push(`${label}: say what one piece is called, e.g. egg white.`);
+      else if (pieceName.length > PIECE_NAME_MAX) errors.push(`${label}: the piece name must be at most ${PIECE_NAME_MAX} characters.`);
+      const size = parseNumber(pieceText);
+      if (!(Number.isFinite(size) && size > 0 && size <= PIECE_AMOUNT_MAX)) {
+        errors.push(`${label}: one piece must weigh more than 0 and at most ${PIECE_AMOUNT_MAX}.`);
+      }
+    }
   });
   return errors;
 }
@@ -182,6 +210,8 @@ export function toPayload(draft: FoodDraft) {
       protein_g: parseNumber(v.proteinG),
       carbs_g: parseNumber(v.carbsG),
       fat_g: parseNumber(v.fatG),
+      piece_name: v.pieceName.trim() || null,
+      piece_amount: v.pieceName.trim() ? parseNumber(v.pieceAmount) : null,
     })),
   };
 }

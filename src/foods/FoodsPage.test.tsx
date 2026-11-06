@@ -181,6 +181,29 @@ describe('FoodEditor', () => {
     expect(api.listFoods).toHaveBeenCalledTimes(2); // reloaded after save
   });
 
+  it('saves a piece size with a preparation, and only offers it for g or ml', async () => {
+    api.saveFood.mockResolvedValue(undefined);
+    render(<FoodsPage />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add food' }));
+    await userEvent.type(screen.getByLabelText('Food name'), 'Egg white');
+    await userEvent.type(screen.getByLabelText('Preparation'), 'Raw');
+    await userEvent.type(screen.getByLabelText('Calories (kcal)'), '52');
+    await userEvent.type(screen.getByLabelText('Protein (g)'), '10.9');
+    await userEvent.type(screen.getByLabelText('Carbs (g)'), '0.7');
+    await userEvent.type(screen.getByLabelText('Fat (g)'), '0.2');
+    await userEvent.type(screen.getByLabelText('One piece is called (optional)'), 'egg white');
+    await userEvent.type(screen.getByLabelText('One piece weighs (g)'), '33');
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(api.saveFood.mock.calls[0][0].variants[0]).toMatchObject({ piece_name: 'egg white', piece_amount: 33 });
+
+    cleanup();
+    api.saveFood.mockClear();
+    render(<FoodsPage />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Add food' }));
+    await userEvent.selectOptions(screen.getByLabelText('Unit'), 'PIECE');
+    expect(screen.queryByLabelText('One piece is called (optional)')).toBeNull();
+  });
+
   it('shows the server error and stays open when saving fails', async () => {
     api.saveFood.mockRejectedValue(new Error('Could not save: permission denied'));
     render(<FoodsPage />);
