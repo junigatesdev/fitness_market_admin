@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { MealCategory } from '../mealcategories/model';
 import { Food, UNIT_LABEL, parseNumber } from '../foods/model';
 import {
   ACCENTS, MealAccent, MealDraft, TAG_MAX, accentLabel, draftFoodNames, newItem, toPayload, validateMeal,
@@ -10,6 +11,9 @@ interface MealEditorProps {
   foods: Food[];
   /** False when the database has no hot-meal columns yet: the Hot option is hidden. */
   hotAvailable: boolean;
+  /** The category list, and false when the database has no meal-category tables yet (the choices are hidden). */
+  categories: MealCategory[];
+  categoriesAvailable: boolean;
   onSave: (payload: ReturnType<typeof toPayload>) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
@@ -17,7 +21,7 @@ interface MealEditorProps {
 
 const MAX_RESULTS = 8;
 
-export function MealEditor({ initial, foods, hotAvailable, onSave, onDelete, onClose }: MealEditorProps) {
+export function MealEditor({ initial, foods, hotAvailable, categories, categoriesAvailable, onSave, onDelete, onClose }: MealEditorProps) {
   const [draft, setDraft] = useState(initial);
   const [search, setSearch] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
@@ -68,7 +72,7 @@ export function MealEditor({ initial, foods, hotAvailable, onSave, onDelete, onC
     e.preventDefault();
     const found = validateMeal(draft, index);
     setErrors(found);
-    if (found.length === 0) void run(() => onSave(toPayload(draft)));
+    if (found.length === 0) void run(() => onSave(toPayload(draft, categoriesAvailable)));
   }
 
   function handleDelete() {
@@ -111,6 +115,29 @@ export function MealEditor({ initial, foods, hotAvailable, onSave, onDelete, onC
               </select>
             </div>
           </div>
+
+          {categoriesAvailable && (
+            <fieldset className="areas">
+              <legend>Categories</legend>
+              <p className="hint">Where this meal shows on the app’s Meals screen. Pick as many as fit; leave empty if none.</p>
+              {categories.length === 0 ? (
+                <p className="hint">No categories yet. Add some on the Meal categories screen.</p>
+              ) : (
+                <div className="area-options">
+                  {categories.map((c) => (
+                    <label key={c.id} className="check chip">
+                      <input type="checkbox" checked={draft.categoryIds.includes(c.id)}
+                        onChange={(e) => setDraft({
+                          ...draft,
+                          categoryIds: e.target.checked ? [...draft.categoryIds, c.id] : draft.categoryIds.filter((id) => id !== c.id),
+                        })} />
+                      {c.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          )}
 
           <label className="check">
             <input type="checkbox" checked={draft.published}

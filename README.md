@@ -3,7 +3,7 @@
 Admin portal for the Fitness Market Android app (food database, meal ideas). Web app: Vite + React + TypeScript,
 with [Supabase](https://supabase.com) for sign-in and data.
 
-**Status:** admin sign-in, dashboard (sample numbers), and screens for Foods, Categories, World areas and Meals.
+**Status:** admin sign-in, dashboard (sample numbers), and screens for Foods, Categories, World areas, Meals and Meal categories.
 
 ```bash
 npm install
@@ -25,6 +25,7 @@ npm run build
    8. `supabase/migrations/0008_default_days.sql`: default workout days (a tree of groups and exercises) copied to new customers
    9. `supabase/migrations/0009_drinks.sql`: drinks (tea, milk tea, coffee) with cup size, milk and sugar choices, for the app's Add food > Drinks row
    10. `supabase/migrations/0010_piece_sizes.sql`: optional piece size per preparation (one egg white = 33 g), so the app can count pieces
+   11. `supabase/migrations/0011_meal_categories.sql`: meal categories (High protein, Western, Eastern, Indian ...) for the app's Meals screen; a meal can be in several
 2. **Create your admin user.** **Authentication → Users → Add user** (your email + a strong password, tick *Auto Confirm User*).
 3. **Make it an admin.** In the SQL Editor run (with your email):
    ```sql
@@ -43,6 +44,7 @@ marked `published`.
 - `supabase/seed-default-days.sql`: 4 starter days (Upper body, Lower body, Push, Pull) from the starter exercises. Run after `0008` and `seed-exercises.sql`. Safe to re-run.
 - `supabase/seed-drinks.sql`: 4 drinks (Chay / Milk tea, Black tea, Coffee, Latte) using the starter milk and sugar foods. Run after `0009` and `seed-foods.sql`. Safe to re-run.
 - `supabase/seed-piece-sizes.sql`: piece sizes for 15 starter preparations (egg white, egg, roti, naan, almonds, milk glass ...). Run after `0010` and `seed-foods.sql`. Safe to re-run; never changes a piece size you set.
+- `supabase/seed-meal-categories.sql`: puts the 6 starter meals into the starter meal categories. Run after `0011` and `seed-meals.sql`. Safe to re-run; never removes a tag you set.
 - `supabase/seed-drink-foods.sql`: milk tea (chay), milk coffee and latte as normal foods (per 100 ml, 1 cup = 250/200/300 ml, with 0-3 teaspoons of sugar) so they show up in the Foods list and in the app's search. Run after `0010` and `seed-foods.sql`. Safe to re-run.
 - `supabase/seed-meals.sql`: 6 meals built from the starter foods, published and hot. Run after `0006` and `seed-foods.sql`. Safe to re-run.
 

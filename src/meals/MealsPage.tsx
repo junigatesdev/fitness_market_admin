@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { listFoods } from '../foods/api';
+import { listMealCategories } from '../mealcategories/api';
+import { MealCategory } from '../mealcategories/model';
 import { Food } from '../foods/model';
 import * as api from './api';
 import { MealEditor } from './MealEditor';
@@ -15,15 +17,24 @@ export function MealsPage() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'all' | 'hot'>('all');
   const [hotAvailable, setHotAvailable] = useState(true);
+  const [categories, setCategories] = useState<MealCategory[]>([]);
+  const [categoriesAvailable, setCategoriesAvailable] = useState(true);
   const [editing, setEditing] = useState<MealDraft>();
 
   const load = useCallback(async () => {
     setLoadError(undefined);
     try {
-      const [m, f] = await Promise.all([api.listMeals(), listFoods()]);
+      // Meal categories are optional here: if their tables aren't set up yet, meals still load.
+      const categoriesResult = listMealCategories().then(
+        (c) => ({ ok: true as const, c }),
+        () => ({ ok: false as const, c: [] as MealCategory[] }),
+      );
+      const [m, f, c] = await Promise.all([api.listMeals(), listFoods(), categoriesResult]);
       setFoods(f);
       setMeals(m.meals);
       setHotAvailable(m.hotAvailable);
+      setCategories(c.c);
+      setCategoriesAvailable(c.ok && m.categoriesAvailable);
     } catch (e) {
       setLoadError(e instanceof Error ? e.message : 'Could not load meals.');
     }
@@ -40,6 +51,8 @@ export function MealsPage() {
     const base = view === 'hot' ? hotMeals(meals ?? []) : (meals ?? []);
     return base.filter((m) => !q || m.name.toLowerCase().includes(q) || m.tag.toLowerCase().includes(q));
   }, [meals, search, view]);
+
+  const categoryName = useMemo(() => new Map(categories.map((c) => [c.id, c.name])), [categories]);
 
   const hotList = useMemo(() => hotMeals(meals ?? []), [meals]);
 
@@ -115,6 +128,13 @@ export function MealsPage() {
         </p>
       )}
 
+      {!categoriesAvailable && (
+        <p role="status" className="notice">
+          Meal categories aren’t set up in the database yet, so the category choices are hidden. Meals still work. To turn
+          them on, run <code>0011_meal_categories.sql</code> in the Supabase SQL Editor, then refresh.
+        </p>
+      )}
+
       {actionError && <p role="alert" className="form-error">{actionError}</p>}
 
       {loadError ? (
@@ -149,6 +169,13 @@ export function MealsPage() {
                 <div className="meal-info">
                   <h2>{m.name}</h2>
                   <p className="stat-note">Card colour: {accentLabel(m.accent)}</p>
+                  {categoriesAvailable && (
+                    <p className="stat-note">
+                      Categories: {m.categoryIds.length === 0
+                        ? 'none'
+                        : m.categoryIds.map((id) => categoryName.get(id)).filter(Boolean).join(', ')}
+                    </p>
+                  )}
                   <ul className="meal-foods">
                     {m.items.map((i) => <li key={i.variantId}>{formatItem(i, index)}</li>)}
                   </ul>
@@ -186,6 +213,8 @@ export function MealsPage() {
           initial={editing}
           foods={foods}
           hotAvailable={hotAvailable}
+          categories={categories}
+          categoriesAvailable={categoriesAvailable}
           onClose={() => setEditing(undefined)}
           onSave={handleSave}
           onDelete={editing.id ? () => handleDelete(editing.id!) : undefined}

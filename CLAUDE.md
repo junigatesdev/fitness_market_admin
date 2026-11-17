@@ -23,13 +23,13 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
 - Cloud sessions **cannot reach Supabase** (network policy) and have no login. So you cannot read or write the live
   database. To change data or schema: write SQL **for the owner to paste in Supabase > SQL Editor**, and say which file to run.
   The owner can add Supabase's read-only MCP connector or allow the host to give a future session read access.
-- Schema files, run in order on a new project (`supabase/setup-all.sql` is 0001-0010 joined for one paste):
-  `0001_init` (admins, foods, food_variants, RLS) · `0002_save_food` · `0003_meals` · `0004_categories` · `0005_world_areas` · `0006_hot_meals` · `0007_exercises` · `0008_default_days` · `0009_drinks` · `0010_piece_sizes`.
+- Schema files, run in order on a new project (`supabase/setup-all.sql` is 0001-0011 joined for one paste):
+  `0001_init` (admins, foods, food_variants, RLS) · `0002_save_food` · `0003_meals` · `0004_categories` · `0005_world_areas` · `0006_hot_meals` · `0007_exercises` · `0008_default_days` · `0009_drinks` · `0010_piece_sizes` · `0011_meal_categories`.
   **Ship order matters:** the portal deploys the moment it is pushed, so a portal change that needs new tables/columns must
   keep working when the migration has not been run yet (degrade gracefully with a notice), and the owner must be told to run
   the SQL first.
   New schema change = a **new numbered migration** (never edit one that was already run) AND append it to `setup-all.sql`.
-- Starter data: `seed-foods.sql` (115 foods, approximate values), `seed-food-areas.sql` `seed-meals.sql` (6 meals) and `seed-exercises.sql` (24 exercises) and `seed-default-days.sql` (4 default workout days) and `seed-drinks.sql` (4 drinks; needs seed-foods.sql) and `seed-piece-sizes.sql` (piece sizes for 15 starter preparations; needs 0010 + seed-foods.sql) and `seed-drink-foods.sql` (milk tea, milk coffee, latte as normal searchable foods, per 100 ml with a "cup" piece; needs 0010 + seed-foods.sql). Seeds must stay idempotent
+- Starter data: `seed-foods.sql` (115 foods, approximate values), `seed-food-areas.sql` `seed-meals.sql` (6 meals) and `seed-exercises.sql` (24 exercises) and `seed-default-days.sql` (4 default workout days) and `seed-drinks.sql` (4 drinks; needs seed-foods.sql) and `seed-piece-sizes.sql` (piece sizes for 15 starter preparations; needs 0010 + seed-foods.sql) and `seed-meal-categories.sql` (puts the 6 starter meals into the starter meal categories; needs 0011 + seed-meals.sql) and `seed-drink-foods.sql` (milk tea, milk coffee, latte as normal searchable foods, per 100 ml with a "cup" piece; needs 0010 + seed-foods.sql). Seeds must stay idempotent
   (re-running adds nothing) and must never overwrite the owner's own foods.
 - **Test SQL before handing it over.** Postgres 16 server binaries exist at `/usr/lib/postgresql/16/bin` (start as user
   `postgres`). Create stand-ins for Supabase (`anon` / `authenticated` roles, an `auth.users` table, `auth.uid()` reading
@@ -45,6 +45,12 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
   "My meals" (on the phone), and shared user meals (future; needs accounts).
   A food/preparation used by a meal **cannot be deleted** (blocked, naming the meals). A **published meal may only use
   published foods** (the app cannot read drafts).
+- **Meal categories** (migration 0011): `meal_categories` (name, `sort_order`; starter rows High protein, Western, Eastern, Indian) and
+  `meal_category_links` (meal <-> category, any number per meal). They are the rows of the app's new Meals screen ("See all" under Popular
+  meals); a category's "See all" lists its meals. Anon and non-admins read categories always and links of **published** meals only; writes
+  go through `save_meal` (replaces the links when the payload has `category_ids`, leaves them alone when absent) and `reorder_meal_categories`.
+  Deleting a category only removes the tags. The portal still lists and saves meals if 0011 has not been run (it hides the choices and shows a
+  notice). The Android app does not read categories yet.
 - **Piece size** (migration 0010): a preparation may have `piece_name` ("egg white") + `piece_amount` (in its own unit: g, or ml), both
   set or both empty, only on GRAM/MILLILITER preparations. The app then offers Pieces as well as Grams: 2 egg white = 2 x 33 g, calories
   from the per-100 g nutrition. The portal still lists foods if 0010 has not been run (it just leaves the piece columns out).
@@ -78,7 +84,7 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
 
 ## Portal
 - Login = real Supabase email/password **and** a row in `public.admins`. There is no temporary login.
-- Screens: Foods, Categories, World areas, Meals, Drinks, Exercises, Default days (real); Dashboard (sample numbers); Users, Settings (placeholders).
+- Screens: Foods, Categories, World areas, Meals, Meal categories, Drinks, Exercises, Default days (real); Dashboard (sample numbers); Users, Settings (placeholders).
 - Commands: `npm install`, `npm run dev` (http://localhost:5173/fitness_market_admin/), `npm test`, `npm run typecheck`, `npm run build`.
 - Deploy: `.github/workflows/deploy-pages.yml` publishes to GitHub Pages **from the `claude/admiring-cannon-thmsax`
   branch** (the Pages environment only allows `main` and that branch). Pages needs a public repo on the free plan.
@@ -86,4 +92,4 @@ The Android app lives in the separate repo `junigatesdev/fitnessmarket` and read
 
 ## Known gaps
 Dashboard shows sample numbers; Users/Settings are placeholders; unpublishing a food used by a published meal is not
-blocked; admin password should be strong; no CSV import yet; the Android app does not sync meals, categories or areas yet.
+blocked; admin password should be strong; no CSV import yet; the Android app does not sync meal categories yet.

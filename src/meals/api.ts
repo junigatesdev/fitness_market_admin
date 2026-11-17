@@ -8,13 +8,16 @@ function fail(action: string, error: { message: string }): never {
 }
 
 const ITEMS = 'meal_items(food_variant_id, amount, position)';
-const WITH_HOT = `id, name, tag, accent, published, is_hot, hot_order, ${ITEMS}`;
-const WITHOUT_HOT = `id, name, tag, accent, published, ${ITEMS}`;
+const selectFor = (hot: boolean, categories: boolean) =>
+  `id, name, tag, accent, published, ${hot ? 'is_hot, hot_order, ' : ''}${categories ? 'meal_category_links(category_id), ' : ''}${ITEMS}`;
 
 /** The hot-meal columns don't exist yet (migration 0006 not run), or the API's schema cache is stale. */
 class HotColumnsMissing extends Error {}
 
-async function fetchAllMeals(select: string, detectMissingHot: boolean): Promise<Meal[]> {
+/** The meal-category tables don't exist yet (migration 0011 not run), or the API's schema cache is stale. */
+class CategoryTablesMissing extends Error {}
+
+async function fetchAllMeals(select: string, detectMissingHot: boolean, detectMissingCategories: boolean): Promise<Meal[]> {
   const meals: Meal[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
@@ -25,6 +28,7 @@ async function fetchAllMeals(select: string, detectMissingHot: boolean): Promise
       .range(from, from + PAGE - 1)
       .returns<MealRow[]>();
     if (error) {
+      if (detectMissingCategories && error.message.includes('meal_category_links')) throw new CategoryTablesMissing(error.message);
       if (detectMissingHot && /is_hot|hot_order/.test(error.message)) throw new HotColumnsMissing(error.message);
       fail('Could not load meals', error);
     }
@@ -33,13 +37,22 @@ async function fetchAllMeals(select: string, detectMissingHot: boolean): Promise
   }
 }
 
-/** All meals. `hotAvailable` is false when the database has no hot-meal columns yet; meals still load. */
-export async function listMeals(): Promise<{ meals: Meal[]; hotAvailable: boolean }> {
-  try {
-    return { meals: await fetchAllMeals(WITH_HOT, true), hotAvailable: true };
-  } catch (e) {
-    if (e instanceof HotColumnsMissing) return { meals: await fetchAllMeals(WITHOUT_HOT, false), hotAvailable: false };
-    throw e;
+/**
+ * All meals with their categories. `hotAvailable` is false when the database has no hot-meal columns (0006) and
+ * `categoriesAvailable` is false when it has no meal-category tables (0011); meals still load either way.
+ */
+export async function listMeals(): Promise<{ meals: Meal[]; hotAvailable: boolean; categoriesAvailable: boolean }> {
+  let hot = true;
+  let categories = true;
+  for (;;) {
+    try {
+      const meals = await fetchAllMeals(selectFor(hot, categories), hot, categories);
+      return { meals, hotAvailable: hot, categoriesAvailable: categories };
+    } catch (e) {
+      if (e instanceof CategoryTablesMissing && categories) categories = false;
+      else if (e instanceof HotColumnsMissing && hot) hot = false;
+      else throw e;
+    }
   }
 }
 

@@ -8,8 +8,10 @@ const mealsApi = vi.hoisted(() => ({
   listMeals: vi.fn(), saveMeal: vi.fn(), setMealPublished: vi.fn(), deleteMeal: vi.fn(), setMealHot: vi.fn(), reorderHotMeals: vi.fn(),
 }));
 const foodsApi = vi.hoisted(() => ({ listFoods: vi.fn() }));
+const categoriesApi = vi.hoisted(() => ({ listMealCategories: vi.fn() }));
 vi.mock('./api', () => mealsApi);
 vi.mock('../foods/api', () => foodsApi);
+vi.mock('../mealcategories/api', () => categoriesApi);
 
 import { MealsPage } from './MealsPage';
 
@@ -21,12 +23,16 @@ const FOODS: Food[] = [
   { id: 'r', name: 'White rice', categoryId: 'cat-food', areaIds: [], published: false, variants: [v('r1', 'Cooked', 130, 2.7)] },
 ];
 const MEALS: Meal[] = [
-  { id: 'm1', name: 'Chicken bowl', tag: 'High protein', accent: 'GREEN', published: false, isHot: false, hotOrder: 0, items: [{ variantId: 'c1', amount: 200 }, { variantId: 'r1', amount: 100 }] },
+  { id: 'm1', name: 'Chicken bowl', tag: 'High protein', accent: 'GREEN', published: false, isHot: false, hotOrder: 0, categoryIds: [], items: [{ variantId: 'c1', amount: 200 }, { variantId: 'r1', amount: 100 }] },
 ];
 
 beforeEach(() => {
   foodsApi.listFoods.mockResolvedValue(FOODS);
-  mealsApi.listMeals.mockResolvedValue({ meals: MEALS, hotAvailable: true });
+  categoriesApi.listMealCategories.mockResolvedValue([
+    { id: 'hp', name: 'High protein', sortOrder: 1, mealCount: 1 },
+    { id: 'in', name: 'Indian', sortOrder: 2, mealCount: 0 },
+  ]);
+  mealsApi.listMeals.mockResolvedValue({ meals: MEALS, hotAvailable: true, categoriesAvailable: true });
   mealsApi.saveMeal.mockResolvedValue(undefined);
   mealsApi.setMealPublished.mockResolvedValue(undefined);
   mealsApi.deleteMeal.mockResolvedValue(undefined);
@@ -55,7 +61,7 @@ describe('MealsPage', () => {
   });
 
   it('shows an empty state and a retryable error', async () => {
-    mealsApi.listMeals.mockResolvedValueOnce({ meals: [], hotAvailable: true });
+    mealsApi.listMeals.mockResolvedValueOnce({ meals: [], hotAvailable: true, categoriesAvailable: true });
     render(<MealsPage />);
     expect(await screen.findByText('No meals yet')).toBeTruthy();
     cleanup();
@@ -69,13 +75,13 @@ describe('MealsPage', () => {
 
 describe('hot meals', () => {
   const HOT: Meal[] = [
-    { id: 'a', name: 'Alpha', tag: '', accent: 'GREEN', published: true, isHot: true, hotOrder: 1, items: [{ variantId: 'c1', amount: 100 }] },
-    { id: 'b', name: 'Bravo', tag: '', accent: 'OCEAN', published: true, isHot: true, hotOrder: 2, items: [{ variantId: 'c1', amount: 100 }] },
-    { id: 'c', name: 'Charlie', tag: '', accent: 'BLUE', published: true, isHot: false, hotOrder: 0, items: [{ variantId: 'c1', amount: 100 }] },
-    { id: 'd', name: 'Delta (draft)', tag: '', accent: 'BLUE', published: false, isHot: false, hotOrder: 0, items: [{ variantId: 'c1', amount: 100 }] },
+    { id: 'a', name: 'Alpha', tag: '', accent: 'GREEN', published: true, isHot: true, hotOrder: 1, categoryIds: [], items: [{ variantId: 'c1', amount: 100 }] },
+    { id: 'b', name: 'Bravo', tag: '', accent: 'OCEAN', published: true, isHot: true, hotOrder: 2, categoryIds: [], items: [{ variantId: 'c1', amount: 100 }] },
+    { id: 'c', name: 'Charlie', tag: '', accent: 'BLUE', published: true, isHot: false, hotOrder: 0, categoryIds: [], items: [{ variantId: 'c1', amount: 100 }] },
+    { id: 'd', name: 'Delta (draft)', tag: '', accent: 'BLUE', published: false, isHot: false, hotOrder: 0, categoryIds: [], items: [{ variantId: 'c1', amount: 100 }] },
   ];
   beforeEach(() => {
-    mealsApi.listMeals.mockResolvedValue({ meals: HOT, hotAvailable: true });
+    mealsApi.listMeals.mockResolvedValue({ meals: HOT, hotAvailable: true, categoriesAvailable: true });
   });
 
   it('marks hot meals and offers Make hot only for published meals', async () => {
@@ -108,7 +114,7 @@ describe('hot meals', () => {
   });
 
   it('still lists meals, with a notice and no Hot option, when the database lacks the hot columns', async () => {
-    mealsApi.listMeals.mockResolvedValue({ meals: HOT.map((m) => ({ ...m, isHot: false, hotOrder: 0 })), hotAvailable: false });
+    mealsApi.listMeals.mockResolvedValue({ meals: HOT.map((m) => ({ ...m, isHot: false, hotOrder: 0 })), hotAvailable: false, categoriesAvailable: true });
     render(<MealsPage />);
     expect(await screen.findByText('Alpha')).toBeTruthy();
     expect(screen.getByRole('status').textContent).toContain('0006_hot_meals.sql');
@@ -154,7 +160,7 @@ describe('MealEditor', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(mealsApi.saveMeal).toHaveBeenCalledWith({
-      id: null, name: 'Lunch', tag: '', accent: 'GREEN', published: false, is_hot: false,
+      id: null, name: 'Lunch', tag: '', accent: 'GREEN', published: false, is_hot: false, category_ids: [],
       items: [{ food_variant_id: 'c2', amount: 150 }],
     });
     expect(mealsApi.listMeals).toHaveBeenCalledTimes(2); // reloaded
@@ -198,5 +204,37 @@ describe('MealEditor', () => {
     expect(mealsApi.deleteMeal).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: 'Delete meal' }));
     expect(mealsApi.deleteMeal).toHaveBeenCalledWith('m1');
+  });
+});
+
+describe('meal categories', () => {
+  it('shows each meal’s categories and saves the ticked ones', async () => {
+    mealsApi.listMeals.mockResolvedValue({
+      meals: [{ ...MEALS[0], categoryIds: ['hp'] }], hotAvailable: true, categoriesAvailable: true,
+    });
+    render(<MealsPage />);
+    const card = (await screen.findByText('Chicken bowl')).closest('li')!;
+    expect(within(card).getByText('Categories: High protein')).toBeTruthy();
+    await userEvent.click(within(card).getByRole('button', { name: 'Edit' }));
+    expect((screen.getByLabelText('High protein') as HTMLInputElement).checked).toBe(true);
+    await userEvent.click(screen.getByLabelText('Indian'));
+    await userEvent.click(screen.getByLabelText('High protein'));
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(mealsApi.saveMeal).toHaveBeenCalled());
+    expect(mealsApi.saveMeal.mock.calls[0][0]).toMatchObject({ id: 'm1', category_ids: ['in'] });
+  });
+
+  it('hides the choices and does not send categories when migration 0011 has not been run', async () => {
+    categoriesApi.listMealCategories.mockRejectedValue(new Error('Could not load meal categories: relation "public.meal_categories" does not exist'));
+    mealsApi.listMeals.mockResolvedValue({ meals: MEALS, hotAvailable: true, categoriesAvailable: false });
+    render(<MealsPage />);
+    const card = (await screen.findByText('Chicken bowl')).closest('li')!;
+    expect(screen.getByRole('status').textContent).toContain('0011_meal_categories.sql');
+    expect(within(card).queryByText(/Categories:/)).toBeNull();
+    await userEvent.click(within(card).getByRole('button', { name: 'Edit' }));
+    expect(screen.queryByLabelText('High protein')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(mealsApi.saveMeal).toHaveBeenCalled());
+    expect(mealsApi.saveMeal.mock.calls[0][0]).not.toHaveProperty('category_ids');
   });
 });

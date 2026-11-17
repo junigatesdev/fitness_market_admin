@@ -23,6 +23,8 @@ export interface Meal {
   isHot: boolean;
   /** Position among the hot meals (1 = first). 0 when not hot. */
   hotOrder: number;
+  /** Meal categories (the rows on the app's Meals screen); any number. Empty when the tables don't exist yet. */
+  categoryIds: string[];
   items: MealItem[];
 }
 
@@ -35,6 +37,8 @@ export interface MealRow {
   /** Absent when the hot-meal columns don't exist yet (migration 0006 not run). */
   is_hot?: boolean;
   hot_order?: number;
+  /** Absent when the meal-category tables don't exist yet (migration 0011 not run). */
+  meal_category_links?: { category_id: string }[];
   meal_items: { food_variant_id: string; amount: number; position: number }[];
 }
 
@@ -47,6 +51,7 @@ export function fromRow(row: MealRow): Meal {
     published: row.published,
     isHot: row.is_hot ?? false,
     hotOrder: row.hot_order ?? 0,
+    categoryIds: (row.meal_category_links ?? []).map((c) => c.category_id),
     items: [...row.meal_items]
       .sort((a, b) => a.position - b.position)
       .map((i) => ({ variantId: i.food_variant_id, amount: Number(i.amount) })),
@@ -66,13 +71,14 @@ export interface MealDraft {
   accent: MealAccent;
   published: boolean;
   isHot: boolean;
+  categoryIds: string[];
   items: ItemDraft[];
 }
 
 let keyCounter = 0;
 const nextKey = () => `i${++keyCounter}`;
 
-export const blankMeal = (): MealDraft => ({ name: '', tag: '', accent: 'GREEN', published: false, isHot: false, items: [] });
+export const blankMeal = (): MealDraft => ({ name: '', tag: '', accent: 'GREEN', published: false, isHot: false, categoryIds: [], items: [] });
 
 /** A new item starts at the preparation's own basis amount (e.g. 100 g). */
 export function newItem(ref: VariantRef): ItemDraft {
@@ -87,6 +93,7 @@ export function toDraft(meal: Meal): MealDraft {
     accent: meal.accent,
     published: meal.published,
     isHot: meal.isHot,
+    categoryIds: [...meal.categoryIds],
     items: meal.items.map((i) => ({ key: nextKey(), variantId: i.variantId, amount: String(i.amount) })),
   };
 }
@@ -127,7 +134,11 @@ export function validateMeal(draft: MealDraft, index: Map<string, VariantRef>): 
   return errors;
 }
 
-export function toPayload(draft: MealDraft) {
+/**
+ * The save payload. `category_ids` is only sent when the meal-category tables exist (`withCategories`): the meal's
+ * categories then become exactly that list. Without it the old save function would ignore it anyway.
+ */
+export function toPayload(draft: MealDraft, withCategories = true) {
   return {
     id: draft.id ?? null,
     name: draft.name.trim(),
@@ -135,6 +146,7 @@ export function toPayload(draft: MealDraft) {
     accent: draft.accent,
     published: draft.published,
     is_hot: draft.isHot,
+    ...(withCategories ? { category_ids: draft.categoryIds } : {}),
     items: draft.items.map((i) => ({ food_variant_id: i.variantId, amount: parseNumber(i.amount) })),
   };
 }

@@ -76,7 +76,7 @@ describe('payload and mapping', () => {
   it('builds the save_meal payload', () => {
     const d = draftWith([['v1', '150'], ['v4', '2']], { name: ' Bowl ', tag: ' High protein ', id: 'm1' });
     expect(toPayload(d)).toEqual({
-      id: 'm1', name: 'Bowl', tag: 'High protein', accent: 'GREEN', published: false, is_hot: false,
+      id: 'm1', name: 'Bowl', tag: 'High protein', accent: 'GREEN', published: false, is_hot: false, category_ids: [],
       items: [{ food_variant_id: 'v1', amount: 150 }, { food_variant_id: 'v4', amount: 2 }],
     });
   });
@@ -93,9 +93,24 @@ describe('payload and mapping', () => {
   });
 });
 
+describe('meal categories', () => {
+  it('reads the categories from the embedded links, and none when the tables are missing', () => {
+    const row: MealRow = { id: 'm1', name: 'X', tag: '', accent: 'GREEN', published: true, meal_category_links: [{ category_id: 'a' }, { category_id: 'b' }], meal_items: [] };
+    expect(fromRow(row).categoryIds).toEqual(['a', 'b']);
+    expect(fromRow({ ...row, meal_category_links: undefined }).categoryIds).toEqual([]);
+  });
+
+  it('sends exactly the ticked categories, or leaves them out when the feature is off', () => {
+    const d = draftWith([['v1', '100']], { categoryIds: ['a', 'b'] });
+    expect(toPayload(d).category_ids).toEqual(['a', 'b']);
+    expect(toPayload(d, false)).not.toHaveProperty('category_ids');
+    expect(toDraft({ ...fromRow({ id: 'm', name: 'X', tag: '', accent: 'GREEN', published: false, meal_category_links: [{ category_id: 'a' }], meal_items: [] }) }).categoryIds).toEqual(['a']);
+  });
+});
+
 describe('hot meals', () => {
   const meal = (id: string, name: string, isHot: boolean, hotOrder: number) => ({
-    id, name, tag: '', accent: 'GREEN' as const, published: true, isHot, hotOrder, items: [],
+    id, name, tag: '', accent: 'GREEN' as const, published: true, isHot, hotOrder, categoryIds: [], items: [],
   });
 
   it('lists only hot meals, in their saved order', () => {

@@ -5,6 +5,7 @@ import { DefaultDaysPage } from './defaultdays/DefaultDaysPage';
 import { DrinksPage } from './drinks/DrinksPage';
 import { ExercisesPage } from './exercises/ExercisesPage';
 import { FoodsPage } from './foods/FoodsPage';
+import { MealCategoriesPage } from './mealcategories/MealCategoriesPage';
 import { MealsPage } from './meals/MealsPage';
 
 interface NavItem {
@@ -19,6 +20,7 @@ const NAV: NavItem[] = [
   { id: 'categories', label: 'Categories', icon: '🏷' },
   { id: 'areas', label: 'World areas', icon: '🌍' },
   { id: 'meals', label: 'Meals', icon: '🍽' },
+  { id: 'mealcategories', label: 'Meal categories', icon: '🗂' },
   { id: 'drinks', label: 'Drinks', icon: '🍵' },
   { id: 'exercises', label: 'Exercises', icon: '🏋' },
   { id: 'defaultdays', label: 'Default days', icon: '📅' },
@@ -106,7 +108,7 @@ export function Dashboard({ username, onSignOut }: DashboardProps) {
         </header>
 
         <main className="content">
-          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : page === 'exercises' ? <ExercisesPage /> : page === 'drinks' ? <DrinksPage /> : page === 'defaultdays' ? <DefaultDaysPage /> : page === 'categories' ? <CategoriesPage /> : page === 'areas' ? <AreasPage /> : <ComingSoon title={current.label} />}
+          {page === 'dashboard' ? <Overview /> : page === 'foods' ? <FoodsPage /> : page === 'meals' ? <MealsPage /> : page === 'exercises' ? <ExercisesPage /> : page === 'drinks' ? <DrinksPage /> : page === 'defaultdays' ? <DefaultDaysPage /> : page === 'categories' ? <CategoriesPage /> : page === 'areas' ? <AreasPage /> : page === 'mealcategories' ? <MealCategoriesPage /> : <ComingSoon title={current.label} />}
         </main>
       </div>
     </div>
